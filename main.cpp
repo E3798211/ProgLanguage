@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdio.h>
 #include "Head/Tree.h"
+#include "Head/ProgLanguage.h"
 
 int main()
 {
@@ -18,4 +19,9 @@ int main()
 
     a.CallGraph();
     */
+
+    Tree a;
+    BuildSyntaxTree(&a);
+
+    a.CallGraph();
 }

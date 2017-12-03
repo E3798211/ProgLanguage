@@ -140,7 +140,45 @@ Node::GetDataType()
     return _data_type;
 }
 
+Node*
+Node::Copy(Node* node_to_copy)
+{
+    EnterFunction();
 
+    Node* new_node = Node::CreateNode();
+    if(node_to_copy != nullptr){
+        new_node->SetData    (node_to_copy->GetData());
+        new_node->SetDataType(node_to_copy->GetDataType());
+        new_node->SetLeft    (Node::Copy(node_to_copy->GetLeft()));
+        new_node->SetRight   (Node::Copy(node_to_copy->GetRight()));
+        new_node->SetParent  (node_to_copy->GetParent());
+    }else{
+        delete new_node;
+        new_node = nullptr;
+    }
+
+    QuitFunction();
+    return new_node;
+}
+
+/*static*/ int
+Node::DeleteNode(Node* node_to_delete)
+{
+    EnterFunction();
+
+    if(node_to_delete == nullptr){
+        QuitFunction();
+        return OK;
+    }
+
+    if(node_to_delete->GetLeft()  != nullptr)    DeleteNode(node_to_delete->GetLeft());
+    if(node_to_delete->GetRight() != nullptr)    DeleteNode(node_to_delete->GetRight());
+
+    delete node_to_delete;
+
+    QuitFunction();
+    return OK;
+}
 
 /*
  *
@@ -249,7 +287,6 @@ Tree::Tree()
 
     try
     {
-        //_root = new Node;
         _root = Node::CreateNode();
         _n_nodes = 1;
     }

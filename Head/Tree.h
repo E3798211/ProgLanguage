@@ -42,6 +42,17 @@
 #include "DebugLib.h"
 
 // =================================================
+
+enum NodeTypes {
+    CONSTANT,
+    VARIABLE,
+
+    BIN_OPERATION,
+    UN_OPERATION
+};
+
+// =================================================
+
 class Node {
 private:
     /// String with data
@@ -74,7 +85,9 @@ public:
 
         \param [in] check_node      Pointer to the node you want to check
     */
-    static bool IsLast(const Node* check_node);
+    static bool  IsLast(const Node* check_node);
+    static Node* Copy(Node* node_to_copy);
+    static int   DeleteNode(Node* node_to_delete);
 
     int SetData    (double new_data);
     int SetLeft    (Node* left);
