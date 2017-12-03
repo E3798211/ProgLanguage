@@ -4,6 +4,7 @@
 
 int main()
 {
+    /*
     Tree a;
 
     a._root->SetLeft(Node::CreateNode());
@@ -15,6 +16,6 @@ int main()
 
     a._root->GetLeft()->GetLeft()->SetData(123);
 
-
     a.CallGraph();
+    */
 }
