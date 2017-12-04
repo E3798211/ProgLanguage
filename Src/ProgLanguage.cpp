@@ -2,7 +2,14 @@
 
 // =========================================    SUPPORTING FUNCTIONS
 
-char* FileRead(const char* file_name)
+/// Returns amount of chars read
+/**
+    \param [in]  filename               Name of the file to be read
+    \param [out] dest                   Buffer to be filled
+
+    \warning Returns -1 in case of error
+*/
+int FileRead(const char* file_name, char*& dest)
 {
     EnterFunction();
 
@@ -15,7 +22,7 @@ char* FileRead(const char* file_name)
         SetColor(DEFAULT);
 
         QuitFunction();
-        return nullptr;
+        return -1;
     }
 
     if(fseek(input, 0, SEEK_END)){
@@ -24,7 +31,7 @@ char* FileRead(const char* file_name)
         SetColor(DEFAULT);
 
         QuitFunction();
-        return nullptr;
+        return -1;
     }
 
     int file_size = ftell(input);
@@ -34,12 +41,13 @@ char* FileRead(const char* file_name)
         SetColor(DEFAULT);
 
         QuitFunction();
-        return nullptr;
+        return -1;
     }
 
-    char* line = nullptr;
-    try{
-        line = new char [file_size];
+    //dest = nullptr;
+    try
+    {
+        dest = new char [file_size];
     }
     catch(const std::bad_alloc& ex){
         SetColor(RED);
@@ -47,22 +55,84 @@ char* FileRead(const char* file_name)
         SetColor(DEFAULT);
 
         QuitFunction();
-        return nullptr;
+        return -1;
     }
 
     rewind(input);
-    int n_chars = fread(line, 1, file_size, input);
-    line[n_chars - 1] = '\0';
+    int n_chars = fread(dest, 1, file_size, input);
+    dest[n_chars - 1] = '\0';
 
     fclose(input);
 
     QuitFunction();
-    return line;
+    return n_chars;
+}
+
+/// Checks if given character is space
+/**
+    Returns true if character is space, false otherwise
+
+    \param [in]  check                  Character to be checked
+*/
+bool IsSpace(int check)
+{
+    if(check == ' ')    return true;
+    if(check == '\t')   return true;
+
+    return false;
+}
+
+/// Deletes spaces from string with programm
+/**
+    Returns shortened version of programm without spaces or nullptr in case of mistake
+
+    \param [in]  programm               String with original programm
+    \param [in]  n_chars                Amount of characters in programm
+*/
+char* DeleteSpaces(const char* programm, size_t n_chars)
+{
+    EnterFunction();
+
+    int no_spaces_len = 0;
+
+    int i = 0;
+    while(i < n_chars){
+        if(!IsSpace(programm[i]))
+            no_spaces_len++;
+        i++;
+    }
+
+    char* no_spaces_programm = nullptr;
+    try
+    {
+        no_spaces_programm = new char [no_spaces_len];
+    }
+    catch(std::bad_alloc& ex)
+    {
+        SetColor(RED);
+        DEBUG printf("=====   Can not allocate %d bytes   =====\n", no_spaces_len);
+        SetColor(DEFAULT);
+
+        QuitFunction();
+        return nullptr;
+    }
+
+    int k = 0;
+        i = 0;
+    while(i < n_chars){
+        if(!IsSpace(programm[i]))
+            no_spaces_programm[k++] = programm[i];
+        i++;
+    }
+
+    QuitFunction();
+    return no_spaces_programm;
 }
 
 // =========================================    Recursive descent parser
 
-const char* s = nullptr;
+const char* original = nullptr;
+const char* s        = nullptr;
 int         p = 0;
 bool    error = 0;
 
@@ -74,7 +144,7 @@ int CountLine()
     int i = 0;
     while(i != p)
     {
-        if(s[i++] == '\n')    line_num++;
+        if(original[i++] == '\n')    line_num++;
     }
 
     QuitFunction();
@@ -285,8 +355,9 @@ GetE()
 }
 
 Node*
-GetGO(const char* expr)
+GetGO(const char* original_expr, const char* expr)
 {
+    original = original_expr;
     s = expr;
     p = 0;
 
@@ -308,14 +379,21 @@ BuildSyntaxTree(Tree* tree)
 {
     EnterFunction();
 
-    char* programm = FileRead(USR_CODE);
+    char* programm = nullptr;
+    int n_chars    = FileRead(USR_CODE, programm);
     if(programm == nullptr){
+        SetColor(RED);
+        DEBUG printf("=====   programm == nullptr   =====\n");
+        SetColor(DEFAULT);
+
         QuitFunction();
         return FILE_NOT_OPENED;
     }
 
-    delete tree->GetRoot();
-    tree->_root = GetGO(programm);
+    char* no_spaces_programm = DeleteSpaces(programm, n_chars);
+
+    //delete tree->GetRoot();
+    tree->_root = GetGO(programm, no_spaces_programm);
 
     QuitFunction();
     return OK;

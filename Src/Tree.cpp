@@ -285,6 +285,7 @@ Tree::Tree()
 {
     EnterFunction();
 
+    /*
     try
     {
         _root = Node::CreateNode();
@@ -296,6 +297,7 @@ Tree::Tree()
         DEBUG printf("=====   Cannot create root node   =====\n");
         SetColor(DEFAULT);
     }
+    */
 
     PrintVar(_root);
     PrintVar(_n_nodes);
@@ -344,7 +346,6 @@ Tree::FindNode(Node* branch_root, const double node_data)
     }
     }
 
-    //if(branch_root->_data == node_data){
     if(branch_root->GetData() == node_data){
         QuitFunction();
         return branch_root;
@@ -357,7 +358,6 @@ Tree::FindNode(Node* branch_root, const double node_data)
     // If found
     if(check_node != nullptr){
         SetColor(GREEN);
-        //DEBUG printf("Element \"%d\" found. p = %p\n", check_node->_data, check_node);
         DEBUG printf("Element \"%lg\" found. p = %p\n", check_node->GetData(), check_node);
         SetColor(DEFAULT);
 
