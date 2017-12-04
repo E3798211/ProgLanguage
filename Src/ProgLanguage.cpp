@@ -129,7 +129,9 @@ char* DeleteSpaces(const char* programm, size_t n_chars)
     return no_spaces_programm;
 }
 
+
 // =========================================    Recursive descent parser
+
 
 const char* original = nullptr;
 const char* s        = nullptr;
@@ -157,43 +159,11 @@ GetN()
     EnterFunction();
 
     double value = 0;
-    int   n_read = 0;
 
-    int dots_met = 0;
-    int digits_after_dot = 1;
-    while(('0' <= s[p] && s[p] <= '9') || s[p] == '.')
-    {
-        if       (dots_met == 0)
-        {
-            value = value * 10 + (s[p] - '0');
-        }
-        else if (dots_met == 1)
-        {
-            double multiply = 1;
-            for(int i = 0; i < digits_after_dot; i++)
-                multiply /= 10;
+    char* num_end = nullptr;
+    value = strtod(s + p, &num_end);
 
-            value += (s[p] - '0') * multiply;
-
-            digits_after_dot++;
-        }
-        else
-        {
-            error = true;
-
-            SetColor(RED);
-            printf("Two dots in number. Line: %d\n", CountLine());
-            SetColor(DEFAULT);
-
-            QuitFunction();
-            return nullptr;
-        }
-
-        n_read++;
-        p++;
-    }
-
-    if(n_read <= 0){
+    if(num_end == s + p){
         error = true;
 
         SetColor(RED);
@@ -203,6 +173,8 @@ GetN()
         QuitFunction();
         return nullptr;
     }
+
+    p += num_end - s - p;
 
     Node* new_node = Node::CreateNode();
     new_node->SetData(value);
@@ -230,6 +202,12 @@ GetP()
         QuitFunction();
         return new_node;
     }
+    /*
+    else if( some word - check in nametable if such word exists )
+    {
+
+    }
+    */
     else
     {
         QuitFunction();
@@ -308,6 +286,14 @@ GetE()
     Node* current       = nullptr;
 
     int times_in_loop = 0;
+
+    /*
+      OR =
+      OR >
+      OR <
+      OR '\n'
+    */
+
     while(s[p] == '+' || s[p] == '-')
     {
         int op = s[p];
@@ -364,7 +350,7 @@ GetGO(const char* original_expr, const char* expr)
     Node* top_operand = GetE();
     if(s[p] != '\0'){
         SetColor(RED);
-        DEBUG printf("Error in line %d\n", CountLine());
+        DEBUG printf("G0: Error in line %d\n", CountLine());
         SetColor(DEFAULT);
     }
 
