@@ -84,8 +84,24 @@ bool IsSpace(int check)
 
 // =========================================    Recursive descent parser
 
+/*
+ *
+ *  Key-words
+ *
+ */
 
-const char* s        = nullptr;
+#define VAR     "var"
+#define FUNK    "def"
+#define IF      "if"
+#define LOOP    "until"
+
+#define MAX_VAR_AMNT        100
+#define MAX_VAR_NAME_LEN    100
+
+char variables[MAX_VAR_AMNT][MAX_VAR_NAME_LEN] = {};
+int  n_variables = 0;
+
+const char* s = nullptr;
 int         p = 0;
 bool    error = 0;
 
@@ -94,6 +110,34 @@ SkipSpaces()
 {
     while(s[p] == ' ' || s[p] == '\t' || s[p] == '\v')      p++;
 }
+
+char* GetWord(char* word)
+{
+    EnterFunction();
+
+    SkipSpaces();
+    //char word[MAX_VAR_NAME_LEN] = {'\0'};
+    int  word_len = 0;
+    while(('a' <= s[p] && s[p] <= 'z') ||
+          ('A' <= s[p] && s[p] <= 'Z') || s[p] == '_')
+    {
+        if(word_len < MAX_VAR_NAME_LEN)
+            word[word_len++] = s[p];
+        p++;
+    }
+
+    if(word_len == 0){
+        QuitFunction();
+        return nullptr;
+    }
+
+    word[word_len] = '\0';
+
+    QuitFunction();
+    return word;
+}
+
+//                        Создание переменной - всегда выдача последнего свободного места в оперативе
 
 int
 CountLine()
@@ -163,12 +207,37 @@ GetP()
         QuitFunction();
         return new_node;
     }
-    /*
-    else if( some word - check in nametable if such word exists )
+    else if(('a' <= s[p] && s[p] <= 'z') ||
+            ('A' <= s[p] && s[p] <= 'Z') || s[p] == '_')
     {
+        char word[MAX_VAR_NAME_LEN] = {};
+        GetWord(word);
 
+        Node* new_node = Node::CreateNode();
+        new_node->SetDataType(VARIABLE);
+
+        int i = 0;
+        bool var_exists = false;
+        while(i < n_variables){
+            if(!strcmp(word, variables[i])){
+                new_node->SetData(i);
+
+                var_exists = true;
+            }
+            i++;
+        }
+
+        if(!var_exists){
+            strcpy(variables[n_variables], word);
+            new_node->SetData(n_variables);
+
+            n_variables++;
+        }
+        p++;
+
+        QuitFunction();
+        return new_node;
     }
-    */
     else
     {
         QuitFunction();
@@ -214,6 +283,16 @@ GetT()
             current = top_operation->GetRight();
 
         }else{
+            /*
+            current->SetLeft (Node::Copy(current));
+            current->SetRight(second_factor);
+            current->SetDataType(BIN_OPERATION);
+
+            if(op == '*')               current->SetData('*');
+            else                        current->SetData('\\');
+
+            current = current->GetRight();
+            */
 
             current->SetLeft (Node::Copy(current));
             current->SetRight(second_factor);
@@ -225,6 +304,7 @@ GetT()
             current = current->GetRight();
         }
 
+        SkipSpaces();
     }
 
     if(times_in_loop < 1){
@@ -249,12 +329,9 @@ GetE()
 
     int times_in_loop = 0;
 
-    /*
-      OR =
-      OR >
-      OR <
-      OR '\n'
-    */
+    // ==
+    // >
+    // <
 
     SkipSpaces();
     while(s[p] == '+' || s[p] == '-')
@@ -303,18 +380,36 @@ GetE()
     return top_operation;
 }
 
+Node* GetOperator()
+{
+    EnterFunction();
+
+    // var
+    // =
+    // if
+    // until
+    // { ... }
+
+    QuitFunction();
+}
+
 Node*
 GetGO(const char* expr)
 {
     s = expr;
     p = 0;
 
+    // GetVarNames
+
+    p = 0;
     Node* top_operand = GetE();
     if(s[p] != '\n' && s[p] != '\0'){
         int error_pos = CountLine();
         SetColor(RED);
         DEBUG printf("G0: Error in line %d\n", error_pos);
         SetColor(DEFAULT);
+        PrintVar(p);
+        PrintVar(s[p]);
     }
 
     if(error)           return nullptr;

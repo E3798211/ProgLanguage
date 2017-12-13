@@ -14,6 +14,7 @@ Node* GetN();
 Node* GetP();
 Node* GetT();
 Node* GetE();
+Node* GetOperator();
 Node* GetGO(const char* expr);
 
 // =========================================    BRAIN

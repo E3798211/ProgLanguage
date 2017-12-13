@@ -35,10 +35,7 @@
 // =========================    Print information debug information
 // Comment next line to turn debug off.
 
-
 #define _DEBUG
-
-
 #include "DebugLib.h"
 
 // =================================================
