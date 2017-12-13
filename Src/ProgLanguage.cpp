@@ -610,12 +610,15 @@ Node* GetOperator()
 
         SkipSpaces();
         int times_in_loop = 0;
-        while(s[p] != '}'){
+        while(/*s[p] != '}'*/1){
 
             SkipSpaces();
             SkipEnters();
 
-            if(s[p] == '}') break;
+            if(s[p] == '}'){
+                p++;
+                break;
+            }
 
             Node* next_expr = GetOperator();
             if(error)       return nullptr;
