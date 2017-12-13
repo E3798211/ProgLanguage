@@ -294,8 +294,6 @@ GetT()
 
             current = current->GetRight();
         }
-
-        //SkipSpaces();
     }
 
     if(times_in_loop < 1){
@@ -325,7 +323,7 @@ GetE()
     // <
 
     SkipSpaces();
-    while(s[p] == '+' || s[p] == '-')
+    while(s[p] == '+' || s[p] == '-' || s[p] == '>' || s[p] == '<' || (s[p] == '=' && s[p + 1] == '='))
     {
         int op = s[p];
         p++;
@@ -344,8 +342,34 @@ GetE()
             top_operation->SetRight(second_term);
             top_operation->SetDataType(BIN_OPERATION);
 
-            if(op == '+')               top_operation->SetData('+');
-            else                        top_operation->SetData('-');
+            //if(op == '+')               top_operation->SetData('+');
+            //else                        top_operation->SetData('-');
+            switch(op)
+            {
+                case '+':
+                {
+                    top_operation->SetData('+');
+                    break;
+                }
+                case '-':
+                {
+                    top_operation->SetData('-');
+                    break;
+                }case '>':
+                {
+                    top_operation->SetData('>');
+                    break;
+                }case '<':
+                {
+                    top_operation->SetData('<');
+                    break;
+                }case '=':
+                {
+                    top_operation->SetData('=');
+                    break;
+                }
+
+            }
 
             current = top_operation->GetRight();
 
@@ -355,8 +379,34 @@ GetE()
             current->SetRight(second_term);
             current->SetDataType(BIN_OPERATION);
 
-            if(op == '+')               current->SetData('+');
-            else                        current->SetData('-');
+            //if(op == '+')               current->SetData('+');
+            //else                        current->SetData('-');
+            switch(op)
+            {
+                case '+':
+                {
+                    current->SetData('+');
+                    break;
+                }
+                case '-':
+                {
+                    current->SetData('-');
+                    break;
+                }case '>':
+                {
+                    current->SetData('>');
+                    break;
+                }case '<':
+                {
+                    current->SetData('<');
+                    break;
+                }case '=':
+                {
+                    current->SetData('=');
+                    break;
+                }
+
+            }
 
             current = current->GetRight();
         }
