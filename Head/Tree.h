@@ -48,6 +48,13 @@ enum NodeTypes {
     OPERATOR
 };
 
+enum Operators {
+    IF_OP,
+    UNTIL_OP,
+    ASSIGN_OP,
+    COMPOSITE_OP
+};
+
 // =================================================
 
 class Node {
