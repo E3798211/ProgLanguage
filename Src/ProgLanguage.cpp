@@ -82,63 +82,21 @@ bool IsSpace(int check)
     return false;
 }
 
-/// Deletes spaces from string with programm
-/**
-    Returns shortened version of programm without spaces or nullptr in case of mistake
-
-    \param [in]  programm               String with original programm
-    \param [in]  n_chars                Amount of characters in programm
-*/
-char* DeleteSpaces(const char* programm, size_t n_chars)
-{
-    EnterFunction();
-
-    int no_spaces_len = 0;
-
-    int i = 0;
-    while(i < n_chars){
-        if(!IsSpace(programm[i]))
-            no_spaces_len++;
-        i++;
-    }
-
-    char* no_spaces_programm = nullptr;
-    try
-    {
-        no_spaces_programm = new char [no_spaces_len];
-    }
-    catch(std::bad_alloc& ex)
-    {
-        SetColor(RED);
-        DEBUG printf("=====   Can not allocate %d bytes   =====\n", no_spaces_len);
-        SetColor(DEFAULT);
-
-        QuitFunction();
-        return nullptr;
-    }
-
-    int k = 0;
-        i = 0;
-    while(i < n_chars){
-        if(!IsSpace(programm[i]))
-            no_spaces_programm[k++] = programm[i];
-        i++;
-    }
-
-    QuitFunction();
-    return no_spaces_programm;
-}
-
-
 // =========================================    Recursive descent parser
 
 
-const char* original = nullptr;
 const char* s        = nullptr;
 int         p = 0;
 bool    error = 0;
 
-int CountLine()
+void
+SkipSpaces()
+{
+    while(s[p] == ' ' || s[p] == '\t' || s[p] == '\v')      p++;
+}
+
+int
+CountLine()
 {
     EnterFunction();
 
@@ -146,7 +104,7 @@ int CountLine()
     int i = 0;
     while(i != p)
     {
-        if(original[i++] == '\n')    line_num++;
+        if(s[i++] == '\n')    line_num++;
     }
 
     QuitFunction();
@@ -159,8 +117,9 @@ GetN()
     EnterFunction();
 
     double value = 0;
-
     char* num_end = nullptr;
+
+    SkipSpaces();
     value = strtod(s + p, &num_end);
 
     if(num_end == s + p){
@@ -191,11 +150,13 @@ GetP()
 {
     EnterFunction();
 
+    SkipSpaces();
     if(s[p] == '(')
     {
         p++;
         Node* new_node = GetE();
 
+        SkipSpaces();
         assert(s[p] == ')');
         p++;
 
@@ -227,6 +188,7 @@ GetT()
     Node* current       = nullptr;
 
     int times_in_loop = 0;
+    SkipSpaces();
     while(s[p] == '*' || s[p] == '/')
     {
         int op = s[p];
@@ -294,6 +256,7 @@ GetE()
       OR '\n'
     */
 
+    SkipSpaces();
     while(s[p] == '+' || s[p] == '-')
     {
         int op = s[p];
@@ -324,7 +287,7 @@ GetE()
             current->SetRight(second_term);
             current->SetDataType(BIN_OPERATION);
 
-            if(op == '*')               current->SetData('+');
+            if(op == '+')               current->SetData('+');
             else                        current->SetData('-');
 
             current = current->GetRight();
@@ -341,16 +304,16 @@ GetE()
 }
 
 Node*
-GetGO(const char* original_expr, const char* expr)
+GetGO(const char* expr)
 {
-    original = original_expr;
     s = expr;
     p = 0;
 
     Node* top_operand = GetE();
-    if(s[p] != '\0'){
+    if(s[p] != '\n' && s[p] != '\0'){
+        int error_pos = CountLine();
         SetColor(RED);
-        DEBUG printf("G0: Error in line %d\n", CountLine());
+        DEBUG printf("G0: Error in line %d\n", error_pos);
         SetColor(DEFAULT);
     }
 
@@ -366,7 +329,7 @@ BuildSyntaxTree(Tree* tree)
     EnterFunction();
 
     char* programm = nullptr;
-    int n_chars    = FileRead(USR_CODE, programm);
+    FileRead(USR_CODE, programm);
     if(programm == nullptr){
         SetColor(RED);
         DEBUG printf("=====   programm == nullptr   =====\n");
@@ -376,10 +339,7 @@ BuildSyntaxTree(Tree* tree)
         return FILE_NOT_OPENED;
     }
 
-    char* no_spaces_programm = DeleteSpaces(programm, n_chars);
-
-    //delete tree->GetRoot();
-    tree->_root = GetGO(programm, no_spaces_programm);
+    tree->_root = GetGO(programm);
 
     QuitFunction();
     return OK;
