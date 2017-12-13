@@ -193,6 +193,8 @@ int
 SetNodes(FILE* output, Node* branch_root)
 {
     //PrintVar(branch_root);
+    //PrintVar(branch_root->GetLeft());
+    //PrintVar(branch_root->GetRight());
     if(branch_root == nullptr)      return OK;
 
     if(output == nullptr){
@@ -268,6 +270,9 @@ int
 Tree::PrintBranch(FILE* output, Node* branch_root, int (*print_type)(FILE* output, Node* node_to_print))
 {
     print_type(output, branch_root);
+
+    //PrintVar(branch_root->GetLeft());
+    //PrintVar(branch_root->GetRight());
 
     if(branch_root->GetLeft() != nullptr)
         PrintBranch(output, branch_root->GetLeft(), print_type);
@@ -453,6 +458,8 @@ Tree::DeleteBranch(Node* branch_root, int rec_depth, bool right)
 int
 Tree::CallGraph()
 {
+    EnterFunction();
+
     FILE* output = fopen(DOT_FILENAME_DEFAULT, "w");
     if(output == nullptr){
         SetColor(RED);
@@ -481,6 +488,7 @@ Tree::CallGraph()
     strcpy(command, OPEN);
     strcat(command, IMG_FILENAME_DEFAULT);
 
+    QuitFunction();
     return system(command);
 }
 

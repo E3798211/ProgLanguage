@@ -45,7 +45,7 @@ enum NodeTypes {
     VARIABLE,
 
     BIN_OPERATION,
-    UN_OPERATION
+    OPERATOR
 };
 
 // =================================================

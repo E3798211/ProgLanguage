@@ -90,10 +90,15 @@ bool IsSpace(int check)
  *
  */
 
-#define VAR     "var"
 #define FUNK    "def"
 #define IF      "if"
-#define LOOP    "until"
+#define UNTIL   "until"
+
+enum Operators {
+    IF_OP,
+    UNTIL_OP,
+    ASSIGN_OP
+};
 
 #define MAX_VAR_AMNT        100
 #define MAX_VAR_NAME_LEN    100
@@ -116,7 +121,6 @@ char* GetWord(char* word)
     EnterFunction();
 
     SkipSpaces();
-    //char word[MAX_VAR_NAME_LEN] = {'\0'};
     int  word_len = 0;
     while(('a' <= s[p] && s[p] <= 'z') ||
           ('A' <= s[p] && s[p] <= 'Z') || s[p] == '_')
@@ -158,7 +162,11 @@ CountLine()
 Node*
 GetN()
 {
+    if(error)       return nullptr;
+
     EnterFunction();
+
+    PrintVar(s[p]);
 
     double value = 0;
     char* num_end = nullptr;
@@ -168,6 +176,7 @@ GetN()
 
     if(num_end == s + p){
         error = true;
+        PrintVar(error);
 
         SetColor(RED);
         printf("Nothing read in GetN()\n", CountLine());
@@ -192,6 +201,8 @@ GetN()
 Node*
 GetP()
 {
+    if(error)       return nullptr;
+
     EnterFunction();
 
     SkipSpaces();
@@ -249,11 +260,13 @@ GetP()
 Node*
 GetT()
 {
+    if(error)       return nullptr;
+
     EnterFunction();
 
     Node* first_factor  = GetP();
-    if(error)           return 0;
 
+    if(error)       return nullptr;
     Node* top_operation = nullptr;
     Node* current       = nullptr;
 
@@ -308,8 +321,9 @@ GetT()
 Node*
 GetE()
 {
-    EnterFunction();
+    if(error)           return nullptr;
 
+    EnterFunction();
     Node* first_term = GetT();
     if(error)           return nullptr;
 
@@ -318,15 +332,12 @@ GetE()
 
     int times_in_loop = 0;
 
-    // ==
-    // >
-    // <
-
     SkipSpaces();
     while(s[p] == '+' || s[p] == '-' || s[p] == '>' || s[p] == '<' || (s[p] == '=' && s[p + 1] == '='))
     {
         int op = s[p];
-        p++;
+        if((s[p] == '=' && s[p + 1] == '='))    p += 2;
+        else                                    p += 1;
 
         Node* second_term = GetT();
 
@@ -342,8 +353,6 @@ GetE()
             top_operation->SetRight(second_term);
             top_operation->SetDataType(BIN_OPERATION);
 
-            //if(op == '+')               top_operation->SetData('+');
-            //else                        top_operation->SetData('-');
             switch(op)
             {
                 case '+':
@@ -379,8 +388,6 @@ GetE()
             current->SetRight(second_term);
             current->SetDataType(BIN_OPERATION);
 
-            //if(op == '+')               current->SetData('+');
-            //else                        current->SetData('-');
             switch(op)
             {
                 case '+':
@@ -423,9 +430,133 @@ GetE()
 
 Node* GetOperator()
 {
+    if(error)       return nullptr;
+
     EnterFunction();
 
-    // var
+    SkipSpaces();
+    char  word[MAX_VAR_NAME_LEN] = {};
+    char* result = GetWord(word);
+
+    Node* new_node = nullptr;
+
+    if(!strcmp(word, IF) || !strcmp(word, UNTIL)){
+
+        Node* condition = nullptr;
+
+        // Taking condition from brackets
+        SkipSpaces();
+        if(s[p] == '(')
+        {
+            p++;
+            condition = GetE();
+
+            SkipSpaces();
+            PrintVar(p);
+            assert(s[p] == ')');
+            p++;
+        }else{
+            error = true;
+            PrintVar(error);
+
+            QuitFunction();
+            return nullptr;
+        }
+
+        // Taking code to be executed
+        SkipSpaces();
+        Node* code = GetOperator();
+
+        new_node = Node::CreateNode();
+        new_node->SetDataType(OPERATOR);
+
+        if(!strcmp(word, IF))           new_node->SetData (IF_OP);
+        else                            new_node->SetData (UNTIL_OP);
+
+        new_node->SetLeft (condition);
+        new_node->SetRight(code);
+
+        QuitFunction();
+        return new_node;
+
+    }
+    else if(s[p] == '{'){
+
+        //while(s[p] != '}')
+        // GetE() must be separated with '\n'
+        // And the last one is '}'
+    }else if(result != nullptr){
+
+        // new variable is created an (or an old one ) and it looks like user wants to assign some value
+
+        Node* assignment_arg = nullptr;
+
+        SkipSpaces();
+        if(s[p] == '='){
+            p++;
+            SkipSpaces();
+            assignment_arg = GetE();
+
+            if(assignment_arg == nullptr){
+                error = true;
+                PrintVar(error);
+
+                QuitFunction();
+                return nullptr;
+            }
+
+        }else{
+            error = true;
+            PrintVar(error);
+
+            QuitFunction();
+            return nullptr;
+        }
+
+        // "Creating" \var
+        Node* var = Node::CreateNode();
+        var->SetDataType(VARIABLE);
+
+        int i = 0;
+        while(i != n_variables){
+            if(!strcmp(word, variables[i]))     break;
+            i++;
+        }
+
+        var->SetData(i);
+
+        // Creating assignment node
+        new_node = Node::CreateNode();
+        new_node->SetDataType(OPERATOR);
+        new_node->SetData(ASSIGN_OP);
+        new_node->SetLeft(var);
+        new_node->SetRight(assignment_arg);
+
+        QuitFunction();
+        return new_node;
+
+    }else{
+
+        // If we could get it - ok, else - error
+
+        Node* expr = GetE();
+        if(expr == nullptr){
+            error = true;
+            PrintVar(error);
+
+            QuitFunction();
+            return nullptr;
+        }
+
+        QuitFunction();
+        return expr;
+    }
+
+    // GetE()
+    // Get Operator itself
+    // GetE() - second operand
+
+
     // =
     // if
     // until
@@ -443,7 +574,8 @@ GetGO(const char* expr)
     // GetVarNames
 
     p = 0;
-    Node* top_operand = GetE();
+    //Node* top_operand = GetE();
+    Node* top_operand = GetOperator();
     if(s[p] != '\n' && s[p] != '\0'){
         int error_pos = CountLine();
         SetColor(RED);
