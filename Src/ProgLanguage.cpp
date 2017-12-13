@@ -233,7 +233,8 @@ GetP()
 
             n_variables++;
         }
-        p++;
+
+        SkipSpaces();
 
         QuitFunction();
         return new_node;
@@ -283,16 +284,6 @@ GetT()
             current = top_operation->GetRight();
 
         }else{
-            /*
-            current->SetLeft (Node::Copy(current));
-            current->SetRight(second_factor);
-            current->SetDataType(BIN_OPERATION);
-
-            if(op == '*')               current->SetData('*');
-            else                        current->SetData('\\');
-
-            current = current->GetRight();
-            */
 
             current->SetLeft (Node::Copy(current));
             current->SetRight(second_factor);
@@ -304,7 +295,7 @@ GetT()
             current = current->GetRight();
         }
 
-        SkipSpaces();
+        //SkipSpaces();
     }
 
     if(times_in_loop < 1){
