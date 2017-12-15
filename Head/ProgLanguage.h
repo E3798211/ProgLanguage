@@ -28,4 +28,11 @@ int BuildSyntaxTree(Tree* tree);
 /// Creates file with asm code
 int CompileCode();
 
+/// Gets round the tree and writes correct asm code to output file
+/**
+    \param [in] output              File where to write
+    \param [in] root_node           Pointer to the root of the tree
+*/
+int TranslateCode(FILE* output, Node* root_node);
+
 #endif // PROGLANGUAGE_H_INCLUDED

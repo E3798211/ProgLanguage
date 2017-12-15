@@ -1,0 +1,14 @@
+{
+	var x
+	var y
+
+	x = 11
+	y = 9
+	until(x < y){
+		if(2 < 5){
+			x = y - 6
+			y = 1
+		}
+	}
+	x = y
+}

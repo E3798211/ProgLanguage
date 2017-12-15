@@ -99,9 +99,9 @@ public:
     int SetParent  (Node* parent);
     int SetDataType(int data_type);
 
-    double GetData ();
-    Node* GetLeft  ();
-    Node* GetRight ();
+    double  GetData();
+    Node*   GetLeft();
+    Node*  GetRight();
     Node* GetParent();
     int GetDataType();
 };

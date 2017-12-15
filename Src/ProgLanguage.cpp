@@ -107,21 +107,20 @@ int         p = 0;
 int     s_len = 0;
 bool    error = 0;
 
-void
-SkipSpaces()
+void SkipSpaces()
 {
     while(s[p] == ' ' || s[p] == '\t' || s[p] == '\v')      p++;
 }
-void
-SkipEnters()
+void SkipEnters()
 {
     while(s[p] == '\n')      p++;
 }
-
 int GetWord(char* word)
 {
     EnterFunction();
 
+    SkipSpaces();
+    SkipEnters();
     SkipSpaces();
     int word_len = 0;
     int position = p;
@@ -145,7 +144,7 @@ int GetWord(char* word)
     return word_len;
 }
 
-//                        Создание переменной - всегда выдача последнего свободного места в оперативе
+//                        Создание переменной - всегда выдача последнего свободного места в оперативе?
 
 int
 CountLine()
@@ -163,8 +162,7 @@ CountLine()
     return line_num;
 }
 
-Node*
-GetN()
+Node* GetN()
 {
     if(error)       return nullptr;
 
@@ -203,8 +201,7 @@ GetN()
     return new_node;
 }
 
-Node*
-GetP()
+Node* GetP()
 {
     if(error)       return nullptr;
 
@@ -267,8 +264,7 @@ GetP()
     }
 }
 
-Node*
-GetT()
+Node* GetT()
 {
     if(error)       return nullptr;
 
@@ -277,15 +273,14 @@ GetT()
     Node* first_factor  = GetP();
 
     if(error)       return nullptr;
-    Node* top_operation = nullptr;
-    Node* current       = nullptr;
+    Node* top_operation  = nullptr;
+    Node* current        = nullptr;
 
     int times_in_loop = 0;
     SkipSpaces();
     while(s[p] == '*' || s[p] == '/')
     {
-        int op = s[p];
-        p++;
+        int op = s[p++];
 
         Node* second_factor = GetP();
 
@@ -297,9 +292,9 @@ GetT()
         if      (times_in_loop == 1){
 
             top_operation = Node::CreateNode();
-            top_operation->SetLeft (first_factor);
-            top_operation->SetRight(second_factor);
-            top_operation->SetDataType(BIN_OPERATION);
+            top_operation->SetLeft      (first_factor);
+            top_operation->SetRight     (second_factor);
+            top_operation->SetDataType  (BIN_OPERATION);
 
             if(op == '*')               top_operation->SetData('*');
             else                        top_operation->SetData('\\');
@@ -308,9 +303,9 @@ GetT()
 
         }else{
 
-            current->SetLeft (Node::Copy(current));
-            current->SetRight(second_factor);
-            current->SetDataType(BIN_OPERATION);
+            current->SetLeft            (Node::Copy(current));
+            current->SetRight           (second_factor);
+            current->SetDataType        (BIN_OPERATION);
 
             if(op == '*')               current->SetData('*');
             else                        current->SetData('\\');
@@ -328,17 +323,16 @@ GetT()
     return top_operation;
 }
 
-Node*
-GetE()
+Node* GetE()
 {
     if(error)           return nullptr;
 
     EnterFunction();
     Node* first_term = GetT();
-    if(error)           return nullptr;
+    if(error)       return nullptr;
 
-    Node* top_operation = nullptr;
-    Node* current       = nullptr;
+    Node* top_operation  = nullptr;
+    Node* current        = nullptr;
 
     int times_in_loop = 0;
 
@@ -346,14 +340,8 @@ GetE()
     SkipEnters();
     SkipSpaces();
 
-    //while(s[p] == '+' || s[p] == '-' || s[p] == '>' || s[p] == '<' || (s[p] == '=' && s[p + 1] == '='))
     while(s[p] == '+' || s[p] == '-' || s[p] == '>' || s[p] == '<' || s[p] == '~')
     {
-        /*
-        int op = s[p];
-        if((s[p] == '=' && s[p + 1] == '='))    p += 2;
-        else                                    p += 1;
-        */
         int op = s[p++];
 
         Node* second_term = GetT();
@@ -366,9 +354,9 @@ GetE()
         if      (times_in_loop == 1){
 
             top_operation = Node::CreateNode();
-            top_operation->SetLeft (first_term);
-            top_operation->SetRight(second_term);
-            top_operation->SetDataType(BIN_OPERATION);
+            top_operation->SetLeft      (first_term);
+            top_operation->SetRight     (second_term);
+            top_operation->SetDataType  (BIN_OPERATION);
 
             switch(op)
             {
@@ -389,11 +377,7 @@ GetE()
                 {
                     top_operation->SetData('<');
                     break;
-                }/*case '=':
-                {
-                    top_operation->SetData('=');
-                    break;
-                }*/
+                }
                 case '~':
                 {
                     top_operation->SetData('~');
@@ -406,9 +390,9 @@ GetE()
 
         }else{
 
-            current->SetLeft (Node::Copy(current));
-            current->SetRight(second_term);
-            current->SetDataType(BIN_OPERATION);
+            current->SetLeft        (Node::Copy(current));
+            current->SetRight       (second_term);
+            current->SetDataType    (BIN_OPERATION);
 
             switch(op)
             {
@@ -430,11 +414,6 @@ GetE()
                     current->SetData('<');
                     break;
                 }
-                /*case '=':
-                {
-                    current->SetData('=');
-                    break;
-                }*/
                 case '~':
                 {
                     current->SetData('~');
@@ -461,10 +440,8 @@ Node* GetOperator()
     if(error)       return nullptr;
 
     EnterFunction();
-
-    SkipSpaces();
-    char  word[MAX_VAR_NAME_LEN] = {};
-    int shift = GetWord(word);
+    char word[MAX_VAR_NAME_LEN] = {};
+    int shift                   = GetWord(word);
 
     Node* new_node = nullptr;
 
@@ -480,8 +457,8 @@ Node* GetOperator()
         {
             p++;
             condition = GetE();
-
             SkipSpaces();
+
             PrintVar(p);
             assert(s[p] == ')');
             p++;
@@ -494,7 +471,6 @@ Node* GetOperator()
         }
 
         // Taking code to be executed
-        SkipSpaces();
         Node* code = GetOperator();
 
         new_node = Node::CreateNode();
@@ -503,8 +479,8 @@ Node* GetOperator()
         if(!strcmp(word, IF))           new_node->SetData(IF_OP);
         else                            new_node->SetData(UNTIL_OP);
 
-        new_node->SetLeft (condition);
-        new_node->SetRight(code);
+        new_node->SetLeft (code);
+        new_node->SetRight(condition);
 
         QuitFunction();
         return new_node;
@@ -512,16 +488,14 @@ Node* GetOperator()
     }
     else if(!strcmp(word, VAR)){
 
-        p += shift;
-        p++;
-        SkipSpaces();
+        p += shift + 1;
         p += GetWord(word);
 
         int i = 0;
         while(i < n_variables){
             if(!strcmp(word, variables[i])){
                 SetColor(RED);
-                printf("=====   Reeclaration of %s   =====\n", word);
+                printf("=====   Redeclaration of %s   =====\n", word);
                 SetColor(DEFAULT);
 
                 error = true;
@@ -536,69 +510,17 @@ Node* GetOperator()
         strcpy(variables[n_variables], word);
         n_variables++;
 
-        // DO SOMETHING
-
         Node* var = Node::CreateNode();
         var->SetDataType(VARIABLE);
-        var->SetData(0);
+        var->SetData    (i);
 
         return var;
-        /*
-
-        // new variable is created an (or an old one ) and it looks like user wants to assign some value
-
-        Node* assignment_arg = nullptr;
-
-        SkipSpaces();
-        if(s[p] == '='){
-            p++;
-            SkipSpaces();
-            assignment_arg = GetE();
-            p++;
-
-            if(assignment_arg == nullptr){
-                error = true;
-                PrintVar(error);
-
-                QuitFunction();
-                return nullptr;
-            }
-
-        }else{
-            error = true;
-            PrintVar(error);
-
-            QuitFunction();
-            return nullptr;
-        }
-
-        // "Creating" \var
-        Node* var = Node::CreateNode();
-        var->SetDataType(VARIABLE);
-
-        int i = 0;
-        while(i != n_variables){
-            if(!strcmp(word, variables[i]))     break;
-            i++;
-        }
-
-        var->SetData(i);
-
-        // Creating assignment node
-        new_node = Node::CreateNode();
-        new_node->SetDataType(OPERATOR);
-        new_node->SetData(ASSIGN_OP);
-        new_node->SetLeft(var);
-        new_node->SetRight(assignment_arg);
-
-        QuitFunction();
-        return new_node;
-        */
 
     }
     else if(s[p] == '{'){
 
         p++;
+
         SkipSpaces();
         if(s[p] != '\n'){
             error = true;
@@ -614,7 +536,6 @@ Node* GetOperator()
 
             SkipSpaces();
             SkipEnters();
-
             if(s[p] == '}'){
                 p++;
                 break;
@@ -626,34 +547,36 @@ Node* GetOperator()
             times_in_loop++;
             if(times_in_loop == 1){
 
-                new_node = Node::Copy(next_expr);
-                Node::DeleteNode(next_expr);
+                new_node = Node::Copy   (next_expr);
+                Node::DeleteNode        (next_expr);
 
             }else if (times_in_loop == 2){
 
-                Node* tmp = Node::Copy(new_node);
-                Node::DeleteNode(new_node);
+                Node* tmp = Node::Copy  (new_node);
+                Node::DeleteNode        (new_node);
 
                 new_node->CreateNode();
-                new_node->SetLeft(Node::Copy(tmp));
-                new_node->SetDataType(OPERATOR);
-                new_node->SetData(COMPOSITE_OP);
-                new_node->SetRight(next_expr);
+                new_node->SetRight      (Node::Copy(tmp));
+                new_node->SetDataType   (OPERATOR);
+                new_node->SetData       (COMPOSITE_OP);
+                new_node->SetLeft       (next_expr);
 
-                Node::DeleteNode(tmp);
-                current = new_node->GetRight();
+                Node::DeleteNode        (tmp);
+
+                current = new_node->GetLeft();
 
             }else{
 
-                Node* tmp = Node::Copy(current);
+                Node* tmp = Node::Copy  (current);
 
-                current->SetLeft(Node::Copy(current));
-                current->SetDataType(OPERATOR);
-                current->SetData(COMPOSITE_OP);
-                current->SetRight(next_expr);
+                current->SetRight       (Node::Copy(current));
+                current->SetDataType    (OPERATOR);
+                current->SetData        (COMPOSITE_OP);
+                current->SetLeft        (next_expr);
 
-                current = current->GetRight();
+                current = current->GetLeft();
             }
+
             if(p > s_len){
                 error = true;
                 SetColor(RED);
@@ -674,7 +597,8 @@ Node* GetOperator()
     else if (shift != 0){   // Var name read. Check if '=' presents
 
         int tmp_pos = p + shift;
-        while(s[tmp_pos] == ' ' || s[tmp_pos] == '\t' || s[tmp_pos] == '\v')    tmp_pos++;
+        while(s[tmp_pos] == ' ' || s[tmp_pos] == '\t' || s[tmp_pos] == '\v')
+            tmp_pos++;
 
         if(s[tmp_pos] == '='){     // Assignment found!
 
@@ -683,10 +607,13 @@ Node* GetOperator()
             // Looking for the variable
             int i = 0;
             while(i < n_variables){
-                if(!strcmp(word, variables[i]))
+                if(!strcmp(word, variables[i])){
+                    n_variables++;
                     break;
+                }
                 i++;
             }
+
             if(i >= n_variables){
                 SetColor(RED);
                 printf("=====   %s was not declared in this scope   =====\n", word);
@@ -702,19 +629,20 @@ Node* GetOperator()
             // Counting right operand
 
             Node* assign_arg = GetE();
-            if(assign_arg == nullptr)       return nullptr;
+            if(assign_arg == nullptr)
+                return nullptr;
 
             // Creating assignment
 
             Node* var = Node::CreateNode();
-            var->SetDataType(VARIABLE);
-            var->SetData(i);
+            var->SetDataType        (VARIABLE);
+            var->SetData            (i);
 
             new_node = Node::CreateNode();
-            new_node->SetDataType(OPERATOR);
-            new_node->SetData('=');
-            new_node->SetLeft(var);
-            new_node->SetRight(assign_arg);
+            new_node->SetDataType   (OPERATOR);
+            new_node->SetData       ('=');
+            new_node->SetLeft       (var);
+            new_node->SetRight      (assign_arg);
 
             QuitFunction();
             return new_node;
@@ -730,11 +658,6 @@ Node* GetOperator()
         }
     }
     else{
-
-        // Returning var name back...
-
-        //p -= strlen(word);
-
         // GetE() must be separated with '\n'
         // If we could get it - ok, else - error
 
@@ -759,20 +682,18 @@ Node* GetOperator()
             QuitFunction();
             return nullptr;
         }
-        //p++;
 
         QuitFunction();
         return expr;
     }
 }
 
-Node*
-GetGO(const char* expr)
+Node* GetGO(const char* expr)
 {
     s = expr;
     p = 0;
     s_len = strlen(expr);
-    //Node* top_operand = GetE();
+
     Node* top_operand = GetOperator();
     if(s[p] != '\n' && s[p] != '\0'){
         int error_pos = CountLine();
@@ -790,8 +711,347 @@ GetGO(const char* expr)
 
 // =========================================    BRAIN
 
-int
-BuildSyntaxTree(Tree* tree)
+
+// =============================================================    Atomic print function
+
+/// Prints left branch
+/**
+    Checks if branch exists before print
+
+    \param [in] output              Output file
+    \param [in] left_node           Pointer to the node to be printed
+*/
+int PrintLeft(FILE* output, Node* left_node)
+{
+    EnterFunction();
+
+    if(left_node != nullptr)
+        TranslateCode(output, left_node);
+    else{
+        SetColor(RED);
+        DEBUG printf("=====   Unexpected nullptr as left branch  =====\n");
+        SetColor(DEFAULT);
+
+        QuitFunction();
+        return UNEXPECTED_NULLPTR;
+    }
+
+    QuitFunction();
+    return OK;
+}
+
+/// Prints right branch
+/**
+    Checks if branch exists before print
+
+    \param [in] output              Output file
+    \param [in] right_node          Pointer to the node to be printed
+*/
+int PrintRight(FILE* output, Node* right_node)
+{
+    EnterFunction();
+
+    if(right_node != nullptr)
+        TranslateCode(output, right_node);
+    else{
+        SetColor(RED);
+        DEBUG printf("=====   Unexpected nullptr as left branch  =====\n");
+        SetColor(DEFAULT);
+
+        QuitFunction();
+        return UNEXPECTED_NULLPTR;
+    }
+
+    QuitFunction();
+    return OK;
+}
+
+int labels_num = 0;
+
+/// Prints if-node
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintIf(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    int current_label = labels_num;
+
+    int right = PrintRight(output, root_node->GetRight());
+    fprintf(output, "push 0\nje _%d\n", current_label);
+    int left  = PrintLeft (output, root_node->GetLeft());
+    fprintf(output, "label _%d\n\n", current_label);
+
+    if(left == UNEXPECTED_NULLPTR || right == UNEXPECTED_NULLPTR){
+        PrintVar(left);
+        PrintVar(right);
+
+        QuitFunction();
+        return UNEXPECTED_NULLPTR;
+    }
+
+    labels_num++;
+
+    QuitFunction();
+    return OK;
+}
+
+/// Prints until-node
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintUntil(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    int current_label = labels_num;
+
+    fprintf(output, "label _%d\n\n", current_label);
+    int left  = PrintLeft (output, root_node->GetLeft());
+    int right = PrintRight(output, root_node->GetRight());
+    fprintf(output, "push 0\njne _%d\n\n", current_label);
+
+    if(left == UNEXPECTED_NULLPTR || right == UNEXPECTED_NULLPTR){
+        PrintVar(left);
+        PrintVar(right);
+
+        QuitFunction();
+        return UNEXPECTED_NULLPTR;
+    }
+
+    labels_num++;
+
+    QuitFunction();
+    return OK;
+}
+
+/// Prints assign-node
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintAssign(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    int right = PrintRight(output, root_node->GetRight());
+    fprintf(output, "pop ");
+    int left  = PrintLeft (output, root_node->GetLeft());
+
+    if(left == UNEXPECTED_NULLPTR || right == UNEXPECTED_NULLPTR){
+        PrintVar(left);
+        PrintVar(right);
+
+        QuitFunction();
+        return UNEXPECTED_NULLPTR;
+    }
+
+    QuitFunction();
+    return OK;
+}
+
+/// Prints composite-node
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintComposite(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    int right = PrintRight(output, root_node->GetRight());
+    int left  = PrintLeft (output, root_node->GetLeft());
+
+    if(left == UNEXPECTED_NULLPTR || right == UNEXPECTED_NULLPTR){
+        PrintVar(left);
+        PrintVar(right);
+
+        QuitFunction();
+        return UNEXPECTED_NULLPTR;
+    }
+
+    QuitFunction();
+    return OK;
+}
+
+
+
+/// Prints operands for bin-operations
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintOperands(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    if (root_node->GetRight()->GetDataType() == CONSTANT ||
+        root_node->GetRight()->GetDataType() == VARIABLE)
+        fprintf(output, "push ");
+    TranslateCode(output, root_node->GetRight());
+    if (root_node->GetLeft()->GetDataType() == CONSTANT ||
+        root_node->GetLeft()->GetDataType() == VARIABLE)
+        fprintf(output, "push ");
+    TranslateCode(output, root_node->GetLeft());
+
+    QuitFunction();
+    return OK;
+}
+
+// =============================================================    Global print functions
+
+/// Prints operator-nodes
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintOperator(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    switch((int)root_node->GetData())
+    {
+        case IF_OP:
+        {
+            PrintIf         (output, root_node);
+            break;
+        }
+        case UNTIL_OP:
+        {
+            PrintUntil      (output, root_node);
+            break;
+        }
+        //case ASSIGN_OP:
+        case '=':
+        {
+            PrintAssign     (output, root_node);
+            break;
+        }
+        case COMPOSITE_OP:
+        {
+            PrintComposite  (output, root_node);
+            break;
+        }
+    }
+
+    QuitFunction();
+    return OK;
+}
+
+/// Prints bin-operation-nodes
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintBinOperation(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    PrintOperands(output, root_node);
+    int current_label_1 = labels_num++;
+    int current_label_2 = labels_num++;
+
+    switch((int)root_node->GetData())
+    {
+        case '+':
+        {
+            fprintf(output, "add\n");
+            break;
+        }
+        case '-':
+        {
+            fprintf(output, "sub\n");
+            break;
+        }
+        case '*':
+        {
+            fprintf(output, "mul\n");
+            break;
+        }
+        case '/':
+        {
+            fprintf(output, "div\n");
+            break;
+        }
+        case '>':
+        {
+            fprintf(output, "ja _%d\n", current_label_1);
+            fprintf(output, "push 0\n");
+            fprintf(output, "push 0\n");
+            fprintf(output, "push 0\n");
+            fprintf(output, "je _%d\n", current_label_2);
+            fprintf(output, "label _%d\n", current_label_1);
+            fprintf(output, "push 1\n");
+            fprintf(output, "label _%d\n", current_label_2);
+            break;
+        }
+        case '<':
+        {
+            fprintf(output, "jb _%d\n", current_label_1);
+            fprintf(output, "push 0\n");
+            fprintf(output, "push 0\n");
+            fprintf(output, "push 0\n");
+            fprintf(output, "je _%d\n", current_label_2);
+            fprintf(output, "label _%d\n", current_label_1);
+            fprintf(output, "push 1\n");
+            fprintf(output, "label _%d\n", current_label_2);
+            break;
+        }
+        case '~':
+        {
+            fprintf(output, "je _%d\n", current_label_1);
+            fprintf(output, "push 0\n");
+            fprintf(output, "push 0\n");
+            fprintf(output, "push 0\n");
+            fprintf(output, "je _%d\n", current_label_2);
+            fprintf(output, "label _%d\n", current_label_1);
+            fprintf(output, "push 1\n");
+            fprintf(output, "label _%d\n", current_label_2);
+            break;
+        }
+    }
+
+    QuitFunction();
+    return OK;
+}
+
+int TranslateCode(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    PrintVar(root_node->GetDataType());
+    switch(root_node->GetDataType())
+    {
+        case OPERATOR:
+        {
+            PrintOperator       (output, root_node);
+            break;
+        }
+        case BIN_OPERATION:
+        {
+            PrintBinOperation   (output, root_node);
+            break;
+        }
+        case VARIABLE:
+        {
+            fprintf(output, " [%d]\n", (int)root_node->GetData());
+            break;
+        }
+        case CONSTANT:
+        {
+            fprintf(output, "% lg\n", root_node->GetData());
+            break;
+        }
+    }
+
+    QuitFunction();
+    return OK;
+}
+
+int BuildSyntaxTree(Tree* tree)
 {
     EnterFunction();
 
@@ -812,13 +1072,16 @@ BuildSyntaxTree(Tree* tree)
     return OK;
 }
 
-int
-CompileCode()
+int CompileCode()
 {
+    FILE* output = fopen(ASM_CODE, "w");
+    assert(output != nullptr);
+
     Tree tree;
 
     BuildSyntaxTree(&tree);
-    // TranslateCode(tree);
+    tree.CallGraph();
+    TranslateCode(output, tree.GetRoot());
 }
 
 

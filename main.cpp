@@ -20,8 +20,9 @@ int main()
     a.CallGraph();
     */
 
-    Tree a;
-    BuildSyntaxTree(&a);
+    //Tree a;
+    //BuildSyntaxTree(&a);
 
-    a.CallGraph();
+    //a.CallGraph();
+    CompileCode();
 }
