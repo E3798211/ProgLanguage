@@ -41,6 +41,10 @@
 // =================================================
 
 enum NodeTypes {
+    GLOBAL_NODE,
+    FUNCTION,
+    MAIN_FUNCTION,
+
     VARIABLE_TO_CREATE,
 
     CONSTANT,

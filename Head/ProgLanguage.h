@@ -2,6 +2,7 @@
 #define PROGLANGUAGE_H_INCLUDED
 
 #include "Tree.h"
+#include <ctype.h>
 
 // =========================================    DEFAULT FILES
 
@@ -15,6 +16,7 @@ Node* GetP();
 Node* GetT();
 Node* GetE();
 Node* GetOperator();
+Node* GetFunction();
 Node* GetGO(const char* expr);
 
 // =========================================    BRAIN

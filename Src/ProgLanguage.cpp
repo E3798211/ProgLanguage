@@ -90,7 +90,8 @@ bool IsSpace(int check)
  *
  */
 
-#define FUNK    "def"
+#define FUNC    "function"
+#define MAIN    "main"
 #define IF      "if"
 #define UNTIL   "until"
 #define VAR     "var"
@@ -98,9 +99,13 @@ bool IsSpace(int check)
 
 #define MAX_VAR_AMNT        100
 #define MAX_VAR_NAME_LEN    100
-
 char variables[MAX_VAR_AMNT][MAX_VAR_NAME_LEN] = {};
 int  n_variables = 0;
+
+#define MAX_FUNC_AMNT       100
+#define MAX_FUNC_NAME_LEN   100
+char functions[MAX_FUNC_AMNT][MAX_FUNC_NAME_LEN] = {};
+int n_functions = 0;
 
 const char* s = nullptr;
 int         p = 0;
@@ -113,15 +118,20 @@ void SkipSpaces()
 }
 void SkipEnters()
 {
-    while(s[p] == '\n')      p++;
+    while(s[p] == '\n')     p++;
+}
+void SkipAllSpaces()
+{
+    while(isspace(s[p]))    p++;
 }
 int GetWord(char* word)
 {
     EnterFunction();
 
-    SkipSpaces();
-    SkipEnters();
-    SkipSpaces();
+    //SkipSpaces();
+    //SkipEnters();
+    //SkipSpaces();
+    SkipAllSpaces();
     int word_len = 0;
     int position = p;
     while(('a' <= s[position] && s[position] <= 'z') ||
@@ -336,9 +346,10 @@ Node* GetE()
 
     int times_in_loop = 0;
 
-    SkipSpaces();
-    SkipEnters();
-    SkipSpaces();
+    //SkipSpaces();
+    //SkipEnters();
+    //SkipSpaces();
+    SkipAllSpaces();
 
     while(s[p] == '+' || s[p] == '-' || s[p] == '>' || s[p] == '<' || s[p] == '~')
     {
@@ -701,13 +712,193 @@ Node* GetOperator()
     }
 }
 
+Node* GetFunction()
+{
+    if(error)       return nullptr;
+
+    EnterFunction();
+
+    SkipAllSpaces();
+    char word[MAX_VAR_NAME_LEN] = {};
+
+    Node* top_node = nullptr;
+    Node* current  = nullptr;
+
+    bool main_read = false;
+    while(!main_read){
+
+        int shift  = GetWord(word);
+
+        /*  */if(!strcmp(word, FUNC)){
+
+            p += shift + 1;
+            p += GetWord(word);
+
+            int i = 0;
+            while(i < n_functions){
+                if(!strcmp(word, functions[i])){
+                    SetColor(RED);
+                    printf("=====   Redeclaration of %s   =====\n", word);
+                    SetColor(DEFAULT);
+
+                    error = true;
+                    PrintVar(error);
+
+                    QuitFunction();
+                    return nullptr;
+                }
+                i++;
+            }
+
+            strcpy(functions[n_functions], word);
+            n_functions++;
+
+            SkipSpaces();
+
+            printf("\n\n\n\n\n\t\t\tBLYA\n\n\n\n\n");
+
+            if(s[p] == ':'){            // Function has parameters
+                // while(s[p] != '\n')
+            }else{                      // Function without parameters
+
+                SkipAllSpaces();
+                printf("\n\n\n\n\n\t\t\tBLYA 2\n\n\n\n\n");
+                Node* function_body = GetOperator();
+                PrintVar(error);
+
+                if(error)       return nullptr;
+
+                Node* new_function = Node::CreateNode();
+                new_function->SetDataType   (FUNCTION);
+                new_function->SetData       (i);
+                new_function->SetRight      (nullptr);
+                new_function->SetLeft       (function_body);
+
+                SkipSpaces();
+
+                printf("\n\n\n\n\n\t\t\tBLYA 3\n\n\n\n\n");
+                PrintVar(n_functions);
+
+                /*  */if(n_functions == 1){
+
+                printf("top created\n");
+
+                    top_node = Node::CreateNode();
+                    top_node->SetDataType   (GLOBAL_NODE);
+                    top_node->SetData       (0);
+                    top_node->SetRight      (new_function);
+                    top_node->SetLeft       (nullptr);
+
+                    SkipSpaces();
+
+                    //QuitFunction();
+                    //return top_node;
+
+                }else if(n_functions == 2){
+
+                    printf("second created\n");
+
+                    top_node->SetLeft       (Node::Copy(top_node->GetRight()));
+                    Node::DeleteNode        (top_node->GetRight());
+                    top_node->SetRight      (new_function);
+
+                    current = top_node->GetRight();
+
+                    SkipSpaces();
+
+                    //QuitFunction();
+                    //return top_node;
+
+                }else{
+
+                    printf("third created\n");
+
+                    current->SetLeft(Node::Copy(current));
+
+                    current->SetDataType(GLOBAL_NODE);
+                    current->SetData(0);
+                    current->SetRight(new_function);
+
+                    current = current->GetRight();
+
+                    SkipSpaces();
+
+                }
+
+            }
+
+        }else if(!strcmp(word, MAIN)){
+
+            main_read = true;
+
+            p += shift;
+            Node* main_body = GetOperator();
+
+            if(error)           return nullptr;
+
+            Node* main = Node::CreateNode();
+            main->SetDataType           (MAIN_FUNCTION);
+            main->SetData               (0);
+            main->SetRight              (nullptr);
+            main->SetLeft               (main_body);
+
+            if(n_functions == 0){
+
+                printf("just main created\n");
+
+                Node* global_node = Node::CreateNode();
+                global_node->SetDataType(GLOBAL_NODE);
+                global_node->SetData    (0);
+                global_node->SetRight   (main);
+                global_node->SetLeft    (nullptr);
+
+                QuitFunction();
+                return global_node;
+
+            }else if(n_functions == 1){
+
+                printf("main for 1 created\n");
+
+                    top_node->SetLeft       (Node::Copy(top_node->GetRight()));
+                    top_node->SetRight      (main);
+
+                    SkipSpaces();
+
+                    //QuitFunction();
+                    //return top_node;
+
+                }
+
+            /*
+            {
+
+                //QuitFunction();
+                //return main;
+            }
+            */
+
+        }else{
+
+            //  FUNCTIONS ONLY ALLOWED
+
+            error = true;
+            PrintVar(error);
+
+            QuitFunction();
+            return nullptr;
+
+        }
+    }
+}
+
 Node* GetGO(const char* expr)
 {
     s = expr;
     p = 0;
     s_len = strlen(expr);
 
-    Node* top_operand = GetOperator();
+    //Node* top_operand = GetOperator();
+    Node* top_operand = GetFunction();
     if(s[p] != '\n' && s[p] != '\0'){
         int error_pos = CountLine();
         SetColor(RED);
@@ -721,6 +912,8 @@ Node* GetGO(const char* expr)
     if(error)           return nullptr;
     return top_operand;
 }
+
+
 
 // =========================================    BRAIN
 
