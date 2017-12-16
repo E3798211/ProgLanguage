@@ -1,14 +1,12 @@
 {
 	var x
 	var y
+	var z
 
-	x = 11*1
-	y = 9*1
-	until(x < y){
-		if(2*1 < 5*1){
-			x = y - 6
-			y = 1 + 1
-		}
+	x = 1
+	y = 2
+	until(x < 10){
+		x = x + 1
 	}
-	x = y + 0
+	z = x * 3
 }

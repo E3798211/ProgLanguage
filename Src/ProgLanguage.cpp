@@ -511,7 +511,7 @@ Node* GetOperator()
         n_variables++;
 
         Node* var = Node::CreateNode();
-        var->SetDataType(VARIABLE);
+        var->SetDataType(VARIABLE_TO_CREATE);
         var->SetData    (i);
 
         return var;
@@ -532,7 +532,7 @@ Node* GetOperator()
 
         SkipSpaces();
         int times_in_loop = 0;
-        while(/*s[p] != '}'*/1){
+        while(/*s[p] != '}'*//*1*/1){
 
             SkipSpaces();
             SkipEnters();
@@ -567,7 +567,7 @@ Node* GetOperator()
 
             }else{
 
-                Node* tmp = Node::Copy  (current);
+                //Node* tmp = Node::Copy  (current);
 
                 current->SetRight       (Node::Copy(current));
                 current->SetDataType    (OPERATOR);
@@ -588,6 +588,7 @@ Node* GetOperator()
             }
 
             SkipSpaces();
+            SkipEnters();
         }
         p++;
 
@@ -603,6 +604,9 @@ Node* GetOperator()
         if(s[tmp_pos] == '='){     // Assignment found!
 
             p = tmp_pos + 1;
+
+            printf("\n\n\n\n\n\t\t\t====================\n\n\n\n\n");
+            PrintVar(p);
 
             // Looking for the variable
             int i = 0;
@@ -628,7 +632,13 @@ Node* GetOperator()
 
             // Counting right operand
 
+            printf("\n\n\n\n\n\t\t\tRIGHT OPERAND BEGIN\n\n\n\n\n");
+            PrintVar(p);
+            PrintVar(p);
             Node* assign_arg = GetE();
+            printf("\n\n\n\n\n\t\t\tRIGHT OPERAND END\n\n\n\n\n");
+            PrintVar(p);
+            PrintVar(p);
             if(assign_arg == nullptr)
                 return nullptr;
 
@@ -648,6 +658,9 @@ Node* GetOperator()
             return new_node;
 
         }else{                  // Assignment not found
+
+            PrintVar(p);
+            DEBUG printf("\n\n\nNO AASIGNMENT\n\n");
 
             SkipSpaces();
             SkipEnters();
@@ -766,6 +779,8 @@ int PrintRight(FILE* output, Node* right_node)
     return OK;
 }
 
+
+
 int labels_num = 0;
 
 /// Prints if-node
@@ -777,7 +792,7 @@ int PrintIf(FILE* output, Node* root_node)
 {
     EnterFunction();
 
-    int current_label = labels_num;
+    int current_label = labels_num++;
 
     int right = PrintRight(output, root_node->GetRight());
     fprintf(output, "push 0\nje _%d\n", current_label);
@@ -792,7 +807,7 @@ int PrintIf(FILE* output, Node* root_node)
         return UNEXPECTED_NULLPTR;
     }
 
-    labels_num++;
+    //labels_num++;
 
     QuitFunction();
     return OK;
@@ -807,7 +822,7 @@ int PrintUntil(FILE* output, Node* root_node)
 {
     EnterFunction();
 
-    int current_label = labels_num;
+    int current_label = labels_num++;
 
     fprintf(output, "label _%d\n\n", current_label);
     int left  = PrintLeft (output, root_node->GetLeft());
@@ -822,7 +837,7 @@ int PrintUntil(FILE* output, Node* root_node)
         return UNEXPECTED_NULLPTR;
     }
 
-    labels_num++;
+    //labels_num++;
 
     QuitFunction();
     return OK;
@@ -833,10 +848,12 @@ int PrintUntil(FILE* output, Node* root_node)
     \param [in] output              Output file
     \param [in] root_node           Pointer to the root
 */
-int PrintAssign(FILE* output, Node* root_node)
+int PrintAssign(FILE* output, Node* root_node)                                      // ???
 {
     EnterFunction();
 
+    if(root_node->GetRight()->GetDataType() == CONSTANT)
+        fprintf(output, "push ");
     int right = PrintRight(output, root_node->GetRight());
     fprintf(output, "pop ");
     int left  = PrintLeft (output, root_node->GetLeft());
@@ -1033,6 +1050,11 @@ int TranslateCode(FILE* output, Node* root_node)
         case BIN_OPERATION:
         {
             PrintBinOperation   (output, root_node);
+            break;
+        }
+        case VARIABLE_TO_CREATE:
+        {
+            // Now nothing. Lately - create new, i.e. something related to
             break;
         }
         case VARIABLE:

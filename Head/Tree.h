@@ -41,6 +41,8 @@
 // =================================================
 
 enum NodeTypes {
+    VARIABLE_TO_CREATE,
+
     CONSTANT,
     VARIABLE,
 
