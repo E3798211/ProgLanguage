@@ -4,24 +4,28 @@ function Func_f : s t r
 	var yy
 }
 
-
 function Func_s
 {
 	var xxx
 	var yyy
 }
 
+function Func_t : rr
+{
+	var xxxxxxxx
+	var yyyyyyy
+}
+
 main{
 	var x
 	var y
 	var z
+	x = 12345
+	y = 23456
+	z = 34567
+	
+	Func_s[]
 
-	x = 1
-	y = 2
-	until(x < 10){
-		if(x > 8){
-			y = y + 1
-		}
-		x = x + 1
-	}
+	Func_f[ x | Func_t[x] | y ]
+
 }

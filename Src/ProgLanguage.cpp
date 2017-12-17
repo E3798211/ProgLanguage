@@ -153,7 +153,6 @@ int GetWord(char* word)
     QuitFunction();
     return word_len;
 }
-
 bool VarExists(char* word)
 {
     int i = 0;
@@ -164,7 +163,6 @@ bool VarExists(char* word)
     }
     return false;
 }
-
 bool FuncExists(char* word)
 {
     int i = 0;
@@ -260,6 +258,7 @@ Node* GetP()
         char word[MAX_VAR_NAME_LEN] = {};
         p += GetWord(word);
 
+        /*
         int i = 0;
         bool var_exists = false;
         while(i < n_variables){
@@ -289,6 +288,108 @@ Node* GetP()
 
         QuitFunction();
         return new_node;
+        */
+
+        /* */if(VarExists(word)){
+
+            int i = 0;
+            while(strcmp(word, variables[i]))
+                i++;
+
+            Node* new_node = Node::CreateNode();
+            new_node->SetDataType(VARIABLE);
+            new_node->SetData(i);
+
+            SkipSpaces();
+
+            QuitFunction();
+            return new_node;
+
+        }
+        else if(FuncExists(word)){
+
+            Node* first_arg = nullptr;
+            Node* current   = nullptr;
+            int n_arguments = 0;
+
+            SkipSpaces();
+
+            // Looking for arguments
+            if(s[p] == '['){
+
+                p++;
+                SkipSpaces();
+                while(s[p] != ']'){
+
+                    SkipSpaces();
+                    Node* arg = GetE();
+
+                    Node* next_arg = Node::CreateNode();
+                    next_arg->SetDataType       (ARGUMENT_LIST);
+                    next_arg->SetData           (n_arguments);
+                    next_arg->SetLeft           (nullptr);
+                    next_arg->SetRight          (arg);
+
+                    /* */if(n_arguments == 0){
+                        first_arg = next_arg;
+                        current   = first_arg;
+                    }
+                    else{
+                        current->SetLeft        (next_arg);
+                        current = current->GetLeft();
+                    }
+
+                    n_arguments++;
+
+                    SkipSpaces();
+                    if(s[p] == '|')     p++;
+                    SkipSpaces();
+                }
+                // Skipping ']'
+                p++;
+
+            }else{
+
+                SetColor(RED);
+                printf("=====   Expected brackets after %s   =====\n", word);
+                SetColor(DEFAULT);
+
+                error = true;
+                PrintVar(error);
+
+                return nullptr;
+
+            }
+
+
+            int i = 0;
+            while(!strcmp(word, variables[i]))
+                i++;
+
+            Node* new_node = Node::CreateNode();
+            new_node->SetDataType   (FUNCTION);
+            new_node->SetData       (i);
+            new_node->SetRight      (first_arg);
+            new_node->SetLeft       (nullptr);
+
+            SkipSpaces();
+
+            QuitFunction();
+            return new_node;
+
+        }
+        else{
+
+            SetColor(RED);
+            printf("=====   %s was not declared in this scope   =====\n", word);
+            SetColor(DEFAULT);
+
+            error = true;
+            PrintVar(error);
+
+            return nullptr;
+
+        }
     }
     else
     {
@@ -369,9 +470,6 @@ Node* GetE()
 
     int times_in_loop = 0;
 
-    //SkipSpaces();
-    //SkipEnters();
-    //SkipSpaces();
     SkipAllSpaces();
 
     while(s[p] == '+' || s[p] == '-' || s[p] == '>' || s[p] == '<' || s[p] == '~')
@@ -629,7 +727,7 @@ Node* GetOperator()
         QuitFunction();
         return new_node;
     }
-    else if (shift != 0){   // Var name read. Check if '=' presents
+    else if (shift != 0){   // Var name read. Check if '=' presents                                     // or function call
 
         int tmp_pos = p + shift;
         while(s[tmp_pos] == ' ' || s[tmp_pos] == '\t' || s[tmp_pos] == '\v')
@@ -684,11 +782,7 @@ Node* GetOperator()
 
         }else{                  // Assignment not found
 
-            PrintVar(p);
-            DEBUG printf("\n\n\nNO AASIGNMENT\n\n");
-
-            SkipSpaces();
-            SkipEnters();
+            SkipAllSpaces();
 
             QuitFunction();
             return GetE();
@@ -831,35 +925,21 @@ Node* GetSingleFunction()
             arg->SetDataType            (ARGUMENT);
             arg->SetData                (arg_num);
 
-            // adding an argument
+            Node* next_arg = Node::CreateNode();
+            next_arg->SetDataType       (ARGUMENT_LIST);
+            next_arg->SetData           (n_arguments);
+            next_arg->SetLeft           (nullptr);
+            next_arg->SetRight          (arg);
 
-            /* */if(n_arguments == 0){
+            //current->SetRight           (next_arg);
+            //current = current->GetLeft();
 
-                first_arg = Node::CreateNode();
-                first_arg->SetDataType  (ARGUMENT_LIST);
-                first_arg->SetData      (0);
-                first_arg->SetLeft      (nullptr);
-                first_arg->SetRight     (arg);
-
-            }
-            else if(n_arguments == 1){
-
-                first_arg->SetLeft(Node::Copy(first_arg->GetRight()));
-                Node::DeleteNode(first_arg->GetRight());
-                first_arg->SetRight(arg);
-
-                current = first_arg->GetRight();
-
-            }
-            else{
-
-                current->SetLeft(Node::Copy(current));
-                current->SetDataType(ARGUMENT_LIST);
-                current->SetData(0);
-                current->SetRight(arg);
-
-                current = current->GetRight();
-
+            if(n_arguments == 0){
+                first_arg = next_arg;
+                current   = first_arg;
+            }else{
+                current->SetLeft        (next_arg);
+                current = current->GetLeft();
             }
 
             n_arguments++;
@@ -1022,14 +1102,22 @@ Node* GetGO(const char* expr)
     if(s[p] != '\n' && s[p] != '\0'){
         int error_pos = CountLine();
         SetColor(RED);
-        DEBUG printf("G0: Error in line %d\n", error_pos);
+        printf("G0: Error in line %d\n", error_pos);
         SetColor(DEFAULT);
         PrintVar(p);
         PrintVar(s[p]);
         assert(0);
     }
 
-    if(error)           return nullptr;
+    if(error){
+        int error_pos = CountLine();
+        SetColor(RED);
+        printf("G0: Error in line %d\n", error_pos);
+        SetColor(DEFAULT);
+        PrintVar(p);
+        PrintVar(s[p]);
+        assert(0);
+    }
     return top_operand;
 }
 
@@ -1418,9 +1506,4 @@ int CompileCode()
     tree.CallGraph();
     TranslateCode(output, tree.GetRoot());
 }
-
-
-
-
-
 
