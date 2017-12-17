@@ -1,7 +1,14 @@
-function Func
+function Func_f : s t r
 {
-	var fa
-	var fb
+	var xx
+	var yy
+}
+
+
+function Func_s
+{
+	var xxx
+	var yyy
 }
 
 main{

@@ -45,6 +45,9 @@ enum NodeTypes {
     FUNCTION,
     MAIN_FUNCTION,
 
+    ARGUMENT_LIST,
+    ARGUMENT,
+
     VARIABLE_TO_CREATE,
 
     CONSTANT,

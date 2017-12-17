@@ -97,12 +97,12 @@ bool IsSpace(int check)
 #define VAR     "var"
 
 
-#define MAX_VAR_AMNT        100
+#define MAX_VAR_AMNT        1000
 #define MAX_VAR_NAME_LEN    100
 char variables[MAX_VAR_AMNT][MAX_VAR_NAME_LEN] = {};
 int  n_variables = 0;
 
-#define MAX_FUNC_AMNT       100
+#define MAX_FUNC_AMNT       1000
 #define MAX_FUNC_NAME_LEN   100
 char functions[MAX_FUNC_AMNT][MAX_FUNC_NAME_LEN] = {};
 int n_functions = 0;
@@ -152,6 +152,29 @@ int GetWord(char* word)
 
     QuitFunction();
     return word_len;
+}
+
+bool VarExists(char* word)
+{
+    int i = 0;
+    while(i < n_variables){
+        if(!strcmp(word, variables[i]))
+            return true;
+        i++;
+    }
+    return false;
+}
+
+bool FuncExists(char* word)
+{
+    int i = 0;
+    while(i < n_functions){
+        if(!strcmp(word, functions[i])){
+            return true;
+        }
+        i++;
+    }
+    return false;
 }
 
 //                        Создание переменной - всегда выдача последнего свободного места в оперативе?
@@ -543,7 +566,7 @@ Node* GetOperator()
 
         SkipSpaces();
         int times_in_loop = 0;
-        while(/*s[p] != '}'*//*1*/1){
+        while(/*s[p] != '}'*/1){
 
             SkipSpaces();
             SkipEnters();
@@ -616,9 +639,6 @@ Node* GetOperator()
 
             p = tmp_pos + 1;
 
-            printf("\n\n\n\n\n\t\t\t====================\n\n\n\n\n");
-            PrintVar(p);
-
             // Looking for the variable
             int i = 0;
             while(i < n_variables){
@@ -643,13 +663,7 @@ Node* GetOperator()
 
             // Counting right operand
 
-            printf("\n\n\n\n\n\t\t\tRIGHT OPERAND BEGIN\n\n\n\n\n");
-            PrintVar(p);
-            PrintVar(p);
             Node* assign_arg = GetE();
-            printf("\n\n\n\n\n\t\t\tRIGHT OPERAND END\n\n\n\n\n");
-            PrintVar(p);
-            PrintVar(p);
             if(assign_arg == nullptr)
                 return nullptr;
 
@@ -712,174 +726,278 @@ Node* GetOperator()
     }
 }
 
-Node* GetFunction()
+// =============================================
+
+/**
+    Requires p set to the beginning of the body
+*/
+Node* GetFunctionBody()
+{
+    EnterFunction();
+
+    SkipAllSpaces();
+    Node* body = GetOperator();
+    if(body == nullptr){
+        error = true;
+        PrintVar(error);
+
+        QuitFunction();
+        return nullptr;
+    }
+
+    QuitFunction();
+    return body;
+}
+
+Node* GetMain()
+{
+    EnterFunction();
+
+    Node* body = GetFunctionBody();
+    if(error)           return nullptr;
+
+    Node* main = Node::CreateNode();
+    main->SetDataType   (MAIN_FUNCTION);
+    main->SetData       (0);
+    main->SetLeft       (body);
+    main->SetRight      (nullptr);
+
+    QuitFunction();
+    return main;
+}
+
+Node* GetSingleFunction()
+{
+    EnterFunction();
+
+    // Having p set to the beginning of the name
+    char word[MAX_FUNC_NAME_LEN] = {};
+
+    Node* func      = nullptr;
+    Node* first_arg = nullptr;
+    Node* current   = nullptr;
+
+    SkipSpaces();
+    p += GetWord(word);
+
+
+    if(FuncExists(word)){
+        SetColor(RED);
+        printf("=====   Redeclaration of %s   =====\n", word);
+        SetColor(DEFAULT);
+
+        error = true;
+        PrintVar(error);
+
+        QuitFunction();
+        return nullptr;
+    }
+
+    strcpy(functions[n_functions], word);
+
+    SkipSpaces();
+    /* */if(s[p] == ':'){       // Function with arguments
+
+        p++;
+
+        int n_arguments = 0;
+        while(s[p] != '\n'){
+
+            SkipSpaces();
+            p += GetWord(word);
+            PrintVar(p);
+
+            // Checking if such variable already exists
+
+            if(VarExists(word)){
+                SetColor(RED);
+                printf("=====   Redeclaration of %s   =====\n", word);
+                SetColor(DEFAULT);
+
+                error = true;
+                PrintVar(error);
+
+                QuitFunction();
+                return nullptr;
+            }
+
+            strcpy(variables[n_variables], word);
+            int arg_num = n_variables;
+            n_variables++;
+
+            // Creating new argument
+
+            Node* arg = Node::CreateNode();
+            arg->SetDataType            (ARGUMENT);
+            arg->SetData                (arg_num);
+
+            // adding an argument
+
+            /* */if(n_arguments == 0){
+
+                first_arg = Node::CreateNode();
+                first_arg->SetDataType  (ARGUMENT_LIST);
+                first_arg->SetData      (0);
+                first_arg->SetLeft      (nullptr);
+                first_arg->SetRight     (arg);
+
+            }
+            else if(n_arguments == 1){
+
+                first_arg->SetLeft(Node::Copy(first_arg->GetRight()));
+                Node::DeleteNode(first_arg->GetRight());
+                first_arg->SetRight(arg);
+
+                current = first_arg->GetRight();
+
+            }
+            else{
+
+                current->SetLeft(Node::Copy(current));
+                current->SetDataType(ARGUMENT_LIST);
+                current->SetData(0);
+                current->SetRight(arg);
+
+                current = current->GetRight();
+
+            }
+
+            n_arguments++;
+            SkipSpaces();
+        }
+        SkipAllSpaces();
+
+        Node* body = GetFunctionBody();
+        if(error)           return nullptr;
+
+        func = Node::CreateNode();
+        func->SetDataType   (FUNCTION);
+        func->SetData       (n_functions);
+        func->SetLeft       (body);
+        func->SetRight      (first_arg);
+
+    }
+    else if(s[p] == '\n'){      // Function with no parameters
+
+        Node* body = GetFunctionBody();
+        if(error)           return nullptr;
+
+        func = Node::CreateNode();
+        func->SetDataType   (FUNCTION);
+        func->SetData       (n_functions);
+        func->SetLeft       (body);
+        func->SetRight      (nullptr);
+
+    }
+    else{                       // Invalid input
+        error = true;
+        PrintVar(error);
+
+        QuitFunction();
+        return nullptr;
+    }
+
+    QuitFunction();
+    return func;
+}
+
+// =============================================
+
+Node* GetFunctions()
 {
     if(error)       return nullptr;
 
     EnterFunction();
 
     SkipAllSpaces();
-    char word[MAX_VAR_NAME_LEN] = {};
+    char word[MAX_FUNC_NAME_LEN] = {};
 
-    Node* top_node = nullptr;
-    Node* current  = nullptr;
+    Node* first   = nullptr;
+    Node* current = nullptr;
 
     bool main_read = false;
     while(!main_read){
 
-        int shift  = GetWord(word);
+        SkipAllSpaces();
+        p += GetWord(word);
 
         /*  */if(!strcmp(word, FUNC)){
 
-            p += shift + 1;
-            p += GetWord(word);
+            SkipSpaces();
+            Node* func = GetSingleFunction();
+            if(error)               return nullptr;
 
-            int i = 0;
-            while(i < n_functions){
-                if(!strcmp(word, functions[i])){
-                    SetColor(RED);
-                    printf("=====   Redeclaration of %s   =====\n", word);
-                    SetColor(DEFAULT);
+            /* */if(n_functions == 0){
 
-                    error = true;
-                    PrintVar(error);
+                first = Node::CreateNode();
+                first->SetDataType  (GLOBAL_NODE);
+                first->SetData      (0);
+                first->SetLeft      (nullptr);
+                first->SetRight     (func);
 
-                    QuitFunction();
-                    return nullptr;
-                }
-                i++;
+            }
+            else if(n_functions == 1){
+
+                first->SetLeft      (Node::Copy(first->GetRight()));
+                Node::DeleteNode(first->GetRight());
+                first->SetRight     (func);
+
+                current = first->GetRight();
+
+            }
+            else{
+
+                current->SetLeft    (Node::Copy(current));
+                current->SetDataType(GLOBAL_NODE);
+                current->SetData    (0);
+                current->SetRight   (func);
+
+                current = current->GetRight();
+
             }
 
-            strcpy(functions[n_functions], word);
             n_functions++;
 
-            SkipSpaces();
-
-            printf("\n\n\n\n\n\t\t\tBLYA\n\n\n\n\n");
-
-            if(s[p] == ':'){            // Function has parameters
-                // while(s[p] != '\n')
-            }else{                      // Function without parameters
-
-                SkipAllSpaces();
-                printf("\n\n\n\n\n\t\t\tBLYA 2\n\n\n\n\n");
-                Node* function_body = GetOperator();
-                PrintVar(error);
-
-                if(error)       return nullptr;
-
-                Node* new_function = Node::CreateNode();
-                new_function->SetDataType   (FUNCTION);
-                new_function->SetData       (i);
-                new_function->SetRight      (nullptr);
-                new_function->SetLeft       (function_body);
-
-                SkipSpaces();
-
-                printf("\n\n\n\n\n\t\t\tBLYA 3\n\n\n\n\n");
-                PrintVar(n_functions);
-
-                /*  */if(n_functions == 1){
-
-                printf("top created\n");
-
-                    top_node = Node::CreateNode();
-                    top_node->SetDataType   (GLOBAL_NODE);
-                    top_node->SetData       (0);
-                    top_node->SetRight      (new_function);
-                    top_node->SetLeft       (nullptr);
-
-                    SkipSpaces();
-
-                    //QuitFunction();
-                    //return top_node;
-
-                }else if(n_functions == 2){
-
-                    printf("second created\n");
-
-                    top_node->SetLeft       (Node::Copy(top_node->GetRight()));
-                    Node::DeleteNode        (top_node->GetRight());
-                    top_node->SetRight      (new_function);
-
-                    current = top_node->GetRight();
-
-                    SkipSpaces();
-
-                    //QuitFunction();
-                    //return top_node;
-
-                }else{
-
-                    printf("third created\n");
-
-                    current->SetLeft(Node::Copy(current));
-
-                    current->SetDataType(GLOBAL_NODE);
-                    current->SetData(0);
-                    current->SetRight(new_function);
-
-                    current = current->GetRight();
-
-                    SkipSpaces();
-
-                }
-
-            }
-
-        }else if(!strcmp(word, MAIN)){
+        }
+        else if(!strcmp(word, MAIN)){
 
             main_read = true;
 
-            p += shift;
-            Node* main_body = GetOperator();
+            Node* main = GetMain();
+            if(error)               return nullptr;
 
-            if(error)           return nullptr;
+            /*  */if(n_functions == 0){
 
-            Node* main = Node::CreateNode();
-            main->SetDataType           (MAIN_FUNCTION);
-            main->SetData               (0);
-            main->SetRight              (nullptr);
-            main->SetLeft               (main_body);
-
-            if(n_functions == 0){
-
-                printf("just main created\n");
-
-                Node* global_node = Node::CreateNode();
-                global_node->SetDataType(GLOBAL_NODE);
-                global_node->SetData    (0);
-                global_node->SetRight   (main);
-                global_node->SetLeft    (nullptr);
-
-                QuitFunction();
-                return global_node;
+                first = Node::CreateNode();
+                first->SetDataType  (GLOBAL_NODE);
+                first->SetData      (0);
+                first->SetLeft      (nullptr);
+                first->SetRight     (main);
 
             }else if(n_functions == 1){
 
-                printf("main for 1 created\n");
+                first->SetLeft      (Node::Copy(first->GetRight()));
 
-                    top_node->SetLeft       (Node::Copy(top_node->GetRight()));
-                    top_node->SetRight      (main);
+                PrintVar(first->GetRight());
 
-                    SkipSpaces();
+                Node::DeleteNode    (first->GetRight());
+                first->SetRight     (main);
 
-                    //QuitFunction();
-                    //return top_node;
+            }else{
 
-                }
+                current->SetLeft    (Node::Copy(current));
 
-            /*
-            {
+                current->SetDataType(GLOBAL_NODE);
+                current->SetData    (0);
+                current->SetRight   (main);
 
-                //QuitFunction();
-                //return main;
+                current = current->GetRight();
+
             }
-            */
 
         }else{
 
-            //  FUNCTIONS ONLY ALLOWED
+            // Only \MAIN and \function allowed
 
             error = true;
             PrintVar(error);
@@ -889,6 +1007,8 @@ Node* GetFunction()
 
         }
     }
+
+    return first;
 }
 
 Node* GetGO(const char* expr)
@@ -898,7 +1018,7 @@ Node* GetGO(const char* expr)
     s_len = strlen(expr);
 
     //Node* top_operand = GetOperator();
-    Node* top_operand = GetFunction();
+    Node* top_operand = GetFunctions();
     if(s[p] != '\n' && s[p] != '\0'){
         int error_pos = CountLine();
         SetColor(RED);
@@ -1298,6 +1418,9 @@ int CompileCode()
     tree.CallGraph();
     TranslateCode(output, tree.GetRoot());
 }
+
+
+
 
 
 
