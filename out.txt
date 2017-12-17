@@ -4,7 +4,7 @@ push bx
 push 1 
 add 
 pop bx
-push 5
+push 6
 push ax 
 push 1 
 add 
@@ -43,58 +43,7 @@ end
 
 
 label _F
-push  2
-push ax 
-push 1 
-add 
-pop cx 
-push [cx]
-jb _1
-push 0
-push 0
-push 0
-je _2
-label _1
-push 1
-label _2
-push 0
-je _0
-push 1
-
-push ax 
-pop bx 
-push [ax] 
-pop ax 
-ret
-
-label _0
-
-
-
-push ax 
-pop [bx] 
-push bx 
-pop dx 
-push bx 
-push 1 
-add 
-pop bx
-push  1
-push ax 
-push 1 
-add 
-pop cx 
-push [cx]
-sub
-pop [bx] 
-push 1 
-push bx 
-add 
-pop bx
-
-push dx 
-pop ax
-call _F
+push  3
 push ax 
 push 1 
 add 

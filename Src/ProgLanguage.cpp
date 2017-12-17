@@ -96,6 +96,7 @@ bool IsSpace(int check)
 #define IF      "if"
 #define UNTIL   "until"
 #define VAR     "var"
+#define ASM     "asm"
 
 
 #define MAX_VAR_AMNT        1000
@@ -648,6 +649,33 @@ Node* GetOperator()
 
         QuitFunction();
         return return_statement;
+
+    }
+    else if(!strcmp(word, ASM)){
+
+        SkipSpaces();
+        p += shift;
+        SkipAllSpaces();
+        if(s[p] == '['){
+
+            int beg = ++p;
+
+            Node* asm_insert = Node::CreateNode();
+            asm_insert->SetDataType(ASM_INSERT);
+            asm_insert->SetData(beg);
+
+            while(s[p] != ']')  p++;
+            p++;
+
+            return asm_insert;
+
+        }else{
+            error = true;
+            PrintVar(error);
+
+            QuitFunction();
+            return nullptr;
+        }
 
     }
     else if(s[p] == '{'){

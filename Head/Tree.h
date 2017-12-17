@@ -57,7 +57,8 @@ enum NodeTypes {
     VARIABLE,               // 10
 
     BIN_OPERATION,          // 11
-    OPERATOR                // 12
+    OPERATOR,               // 12
+    ASM_INSERT              // 13
 };
 
 enum Operators {

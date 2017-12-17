@@ -1,13 +1,13 @@
 function F : x
 {
-	if(x < 2){
-		return 1
-	}
-	return x * F [ (x - 1) ]
+	return x * 3
 }
 
 main{
 	var x
-	x = 5
+	x = 6
+	
+	asm [push 1000]
+
 	x = F [ x ]
 }
