@@ -1,17 +1,13 @@
-function F : F_first_arg
+function F : x
 {
-	var F_f
-	F_f = 0
-	if(F_first_arg > 0){
-		F_f = 5
+	if(x < 2){
+		return 1
 	}
+	return x * F [ (x - 1) ]
 }
 
 main{
 	var x
-	x = -1
-	F[ x ]
-
 	x = 5
-	F[ x ]
+	x = F [ x ]
 }

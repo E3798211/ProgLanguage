@@ -92,6 +92,7 @@ bool IsSpace(int check)
 
 #define FUNC    "function"
 #define MAIN    "main"
+#define RET     "return"
 #define IF      "if"
 #define UNTIL   "until"
 #define VAR     "var"
@@ -627,7 +628,26 @@ Node* GetOperator()
         var->SetData    (var_num_in_function + 1);
         var_num_in_function++;
 
+        QuitFunction();
         return var;
+
+    }
+    else if(!strcmp(word, RET)){
+
+        SkipSpaces();
+        p += shift;
+
+        Node* to_be_returned = GetE();
+        if(error)                       return nullptr;
+
+        Node* return_statement = Node::CreateNode();
+        return_statement->SetDataType   (RETURN);
+        return_statement->SetData       (0);
+        return_statement->SetLeft       (nullptr);
+        return_statement->SetRight      (to_be_returned);
+
+        QuitFunction();
+        return return_statement;
 
     }
     else if(s[p] == '{'){
@@ -868,7 +888,7 @@ Node* GetSingleFunction()
         return nullptr;
     }
 
-    strcpy(functions[n_functions], word);
+    strcpy(functions[n_functions++], word);
 
     SkipSpaces();
     /* */if(s[p] == ':'){       // Function with arguments
@@ -932,7 +952,7 @@ Node* GetSingleFunction()
 
         func = Node::CreateNode();
         func->SetDataType   (DECLARE_FUNCTION);
-        func->SetData       (n_functions);
+        func->SetData       (n_functions - 1);
         func->SetLeft       (body);
         func->SetRight      (first_arg);
 
@@ -944,7 +964,7 @@ Node* GetSingleFunction()
 
         func = Node::CreateNode();
         func->SetDataType   (DECLARE_FUNCTION);
-        func->SetData       (n_functions);
+        func->SetData       (n_functions - 1);
         func->SetLeft       (body);
         func->SetRight      (nullptr);
 
@@ -988,9 +1008,13 @@ Node* GetFunctions()
 
             SkipSpaces();
             Node* func = GetSingleFunction();
+            //MARK
+            //PrintVar(p);
+            //PrintVar(s[p]);
+            PrintVar(n_functions);
             if(error)               return nullptr;
 
-            /* */if(n_functions == 0){
+            /* */if(n_functions == 1){
 
                 first = Node::CreateNode();
                 first->SetDataType  (GLOBAL_NODE);
@@ -999,7 +1023,7 @@ Node* GetFunctions()
                 first->SetRight     (func);
 
             }
-            else if(n_functions == 1){
+            else if(n_functions == 2){
 
                 first->SetLeft      (Node::Copy(first->GetRight()));
                 Node::DeleteNode(first->GetRight());
@@ -1019,7 +1043,7 @@ Node* GetFunctions()
 
             }
 
-            n_functions++;
+            //n_functions++;
 
         }
         else if(!strcmp(word, MAIN)){
@@ -1237,21 +1261,24 @@ int PrintAssign(FILE* output, Node* root_node)                                  
     /* */if(root_node->GetRight()->GetDataType() == VARIABLE)
         fprintf(output, "push ax \npush %d \nadd \npop cx \npush [cx]\n", (int)root_node->GetRight()->GetData());
     else if(root_node->GetRight()->GetDataType() == CONSTANT)
-        fprintf(output, "push ");
-    int right = PrintRight(output, root_node->GetRight());
+        fprintf(output, "push %lg\n", root_node->GetRight()->GetData());
+    else
+        /*int right = */PrintRight(output, root_node->GetRight());
     /*
     fprintf(output, "pop ");
     int left  = PrintLeft (output, root_node->GetLeft());
     */
     fprintf(output, "push ax \npush %d \nadd \npop cx \npop [cx]\n", (int)root_node->GetLeft()->GetData());
 
-    if(/*left == UNEXPECTED_NULLPTR || */right == UNEXPECTED_NULLPTR){
-        /*PrintVar(left);*/
+    /*
+    if(/*left == UNEXPECTED_NULLPTR || *right == UNEXPECTED_NULLPTR){
+        /*PrintVar(left);*
         PrintVar(right);
 
         QuitFunction();
         return UNEXPECTED_NULLPTR;
     }
+    */
 
     QuitFunction();
     return OK;
@@ -1460,9 +1487,11 @@ int PrintCallFunction(FILE* output, Node* root_node)
 {
     EnterFunction();
 
-    fprintf(output, "\n\npush ax \npop [bx] \npush bx \npop ax \npush bx \npush 1 \nadd \npop bx\n");
+    //fprintf(output, "\n\npush ax \npop [bx] \npush bx \npop ax \npush bx \npush 1 \nadd \npop bx\n");
+    fprintf(output, "\n\npush ax \npop [bx] \npush bx \npop dx \npush bx \npush 1 \nadd \npop bx\n");
     if(root_node->GetRight() != nullptr)        // arguments will be printed if they present
         TranslateCode_2_lvl(output, root_node->GetRight());
+    fprintf(output, "\npush dx \npop ax\n");
     fprintf(output, "call _%s\n", functions[(int)root_node->GetData()]);
 
     QuitFunction();
@@ -1481,14 +1510,16 @@ int PrintCallArgList(FILE* output, Node* root_node)
     //fprintf(output, "push ");
 
     // Here we believe that variable or constant is on the right
-    if(root_node->GetRight()->GetDataType() == CONSTANT)
+    /* */if(root_node->GetRight()->GetDataType() == CONSTANT)
         fprintf(output, "push %lg\n", root_node->GetRight()->GetData());
-    if(root_node->GetRight()->GetDataType() == VARIABLE)
+    else if(root_node->GetRight()->GetDataType() == VARIABLE)
         fprintf(output, "push ax \npush %d \nadd \npop cx \npush [cx]\n", (int)root_node->GetRight()->GetData());
+    else
+        TranslateCode_2_lvl(output, root_node->GetRight());
 
     //PrintRight(output, root_node->GetRight());      // Here we believe that variable or constant is on the right
 
-    fprintf(output, "pop bx \npush 1 \npush bx \nadd \npop bx\n");
+    fprintf(output, "pop [bx] \npush 1 \npush bx \nadd \npop bx\n");
     if(root_node->GetLeft() != nullptr)
         TranslateCode_2_lvl(output, root_node->GetLeft());
 
@@ -1496,6 +1527,27 @@ int PrintCallArgList(FILE* output, Node* root_node)
     return OK;
 }
 
+/// Prints return-nodes
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintReturn(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    /* */if(root_node->GetRight()->GetDataType() == CONSTANT)
+        fprintf(output, "push %lg\n", root_node->GetRight()->GetData());
+    else if(root_node->GetRight()->GetDataType() == VARIABLE)
+        fprintf(output, "push ax \npush %d \nadd \npop cx \npush [cx]\n", (int)root_node->GetRight()->GetData());
+    else
+        TranslateCode_1_lvl(output, root_node->GetRight());
+
+    fprintf(output, "\npush ax \npop bx \npush [ax] \npop ax \nret\n\n");
+
+    QuitFunction();
+    return OK;
+}
 
 int TranslateCode_2_lvl(FILE* output, Node* root_node)
 {
@@ -1517,6 +1569,7 @@ int TranslateCode_2_lvl(FILE* output, Node* root_node)
         case VARIABLE_TO_CREATE:
         {
             // Nothing
+            fprintf(output, "push bx \npush 1 \nadd \npop bx\n");
             break;
         }
         case VARIABLE:
@@ -1530,9 +1583,6 @@ int TranslateCode_2_lvl(FILE* output, Node* root_node)
             fprintf(output, "% lg\n", root_node->GetData());
             break;
         }
-
-        // =============================
-
         case CALL_FUNCTION:
         {
             PrintCallFunction(output, root_node);
@@ -1548,7 +1598,11 @@ int TranslateCode_2_lvl(FILE* output, Node* root_node)
             // Nothing
             break;
         }
-
+        case RETURN:
+        {
+            PrintReturn(output, root_node);
+            break;
+        }
     }
 
     QuitFunction();
@@ -1568,7 +1622,7 @@ int PrintGlobal(FILE* output, Node* root_node)
 
     if(root_node->GetRight() != nullptr)
         TranslateCode_1_lvl(output, root_node->GetRight());
-    if(root_node->GetLeft() != nullptr)
+    if(root_node->GetLeft()  != nullptr)
         TranslateCode_1_lvl(output, root_node->GetLeft());
 
     QuitFunction();
@@ -1610,6 +1664,7 @@ int TranslateCode_1_lvl(FILE* output, Node* root_node)
         }
         case MAIN_FUNCTION:
         {
+            fprintf(output, "push 1\n pop bx\n");
             TranslateCode_2_lvl(output, root_node->GetLeft());
             fprintf(output, "end\n\n\n");
             break;
@@ -1618,6 +1673,10 @@ int TranslateCode_1_lvl(FILE* output, Node* root_node)
         {
             // Nothing
             break;
+        }
+        default:
+        {
+            TranslateCode_2_lvl(output, root_node);
         }
 
     }
@@ -1660,7 +1719,7 @@ int CompileCode()
     Tree tree;
 
     BuildSyntaxTree(&tree);
-    //tree.CallGraph();
+    tree.CallGraph();
     //TranslateCode_2_lvl(output, tree.GetRoot());
     return TranslateCode_1_lvl(output, tree.GetRoot());
 }

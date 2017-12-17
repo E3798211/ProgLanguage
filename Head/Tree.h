@@ -49,14 +49,15 @@ enum NodeTypes {
     DECLARE_ARGUMENT_LIST,  // 4
     CALL_ARGUMENT_LIST,     // 5
     ARGUMENT,               // 6
+    RETURN,                 // 7
 
-    VARIABLE_TO_CREATE,     // 7
+    VARIABLE_TO_CREATE,     // 8
 
-    CONSTANT,               // 8
-    VARIABLE,               // 9
+    CONSTANT,               // 9
+    VARIABLE,               // 10
 
-    BIN_OPERATION,          // 10
-    OPERATOR                // 11
+    BIN_OPERATION,          // 11
+    OPERATOR                // 12
 };
 
 enum Operators {
