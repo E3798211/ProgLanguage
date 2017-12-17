@@ -101,6 +101,7 @@ bool IsSpace(int check)
 #define MAX_VAR_NAME_LEN    100
 char variables[MAX_VAR_AMNT][MAX_VAR_NAME_LEN] = {};
 int  n_variables = 0;
+int  var_num_in_function = 0;
 
 #define MAX_FUNC_AMNT       1000
 #define MAX_FUNC_NAME_LEN   100
@@ -156,7 +157,8 @@ int GetWord(char* word)
 bool VarExists(char* word)
 {
     int i = 0;
-    while(i < n_variables){
+    //while(i < n_variables){
+    while(i < var_num_in_function){
         if(!strcmp(word, variables[i]))
             return true;
         i++;
@@ -258,47 +260,22 @@ Node* GetP()
         char word[MAX_VAR_NAME_LEN] = {};
         p += GetWord(word);
 
-        /*
-        int i = 0;
-        bool var_exists = false;
-        while(i < n_variables){
-            if(!strcmp(word, variables[i])){
-                var_exists = true;
-                break;
-            }
-            i++;
-        }
-
-        if(!var_exists){
-            SetColor(RED);
-            printf("=====   %s was not declared in this scope   =====\n", word);
-            SetColor(DEFAULT);
-
-            error = true;
-            PrintVar(error);
-
-            return nullptr;
-        }
-
-        Node* new_node = Node::CreateNode();
-        new_node->SetDataType(VARIABLE);
-        new_node->SetData(i);
-
-        SkipSpaces();
-
-        QuitFunction();
-        return new_node;
-        */
-
         /* */if(VarExists(word)){
 
             int i = 0;
-            while(strcmp(word, variables[i]))
+            //while(strcmp(word, variables[i]))
+            //    i++;
+            while(i <= var_num_in_function){
+                if(!strcmp(variables[i], word)){
+                    break;
+                    i++;
+                }
                 i++;
+            }
 
             Node* new_node = Node::CreateNode();
             new_node->SetDataType(VARIABLE);
-            new_node->SetData(i);
+            new_node->SetData(i + 1);
 
             SkipSpaces();
 
@@ -325,7 +302,7 @@ Node* GetP()
                     Node* arg = GetE();
 
                     Node* next_arg = Node::CreateNode();
-                    next_arg->SetDataType       (ARGUMENT_LIST);
+                    next_arg->SetDataType       (CALL_ARGUMENT_LIST);
                     next_arg->SetData           (n_arguments);
                     next_arg->SetLeft           (nullptr);
                     next_arg->SetRight          (arg);
@@ -367,7 +344,7 @@ Node* GetP()
                 i++;
 
             Node* new_node = Node::CreateNode();
-            new_node->SetDataType   (FUNCTION);
+            new_node->SetDataType   (CALL_FUNCTION);
             new_node->SetData       (i);
             new_node->SetRight      (first_arg);
             new_node->SetLeft       (nullptr);
@@ -624,7 +601,8 @@ Node* GetOperator()
         p += GetWord(word);
 
         int i = 0;
-        while(i < n_variables){
+        //while(i < n_variables){
+        while(i < var_num_in_function){
             if(!strcmp(word, variables[i])){
                 SetColor(RED);
                 printf("=====   Redeclaration of %s   =====\n", word);
@@ -639,12 +617,15 @@ Node* GetOperator()
             i++;
         }
 
-        strcpy(variables[n_variables], word);
+        //strcpy(variables[n_variables], word);
+        strcpy(variables[var_num_in_function], word);
         n_variables++;
 
         Node* var = Node::CreateNode();
         var->SetDataType(VARIABLE_TO_CREATE);
-        var->SetData    (i);
+        //var->SetData    (i);
+        var->SetData    (var_num_in_function + 1);
+        var_num_in_function++;
 
         return var;
 
@@ -699,8 +680,6 @@ Node* GetOperator()
 
             }else{
 
-                //Node* tmp = Node::Copy  (current);
-
                 current->SetRight       (Node::Copy(current));
                 current->SetDataType    (OPERATOR);
                 current->SetData        (COMPOSITE_OP);
@@ -739,7 +718,8 @@ Node* GetOperator()
 
             // Looking for the variable
             int i = 0;
-            while(i < n_variables){
+            //while(i < n_variables){
+            while(i < var_num_in_function){
                 if(!strcmp(word, variables[i])){
                     n_variables++;
                     break;
@@ -769,7 +749,8 @@ Node* GetOperator()
 
             Node* var = Node::CreateNode();
             var->SetDataType        (VARIABLE);
-            var->SetData            (i);
+            //var->SetData            (i);
+            var->SetData            (i + 1);
 
             new_node = Node::CreateNode();
             new_node->SetDataType   (OPERATOR);
@@ -916,7 +897,9 @@ Node* GetSingleFunction()
             }
 
             strcpy(variables[n_variables], word);
-            int arg_num = n_variables;
+            //int arg_num = n_variables;
+            int arg_num = var_num_in_function + 1;
+            var_num_in_function++;
             n_variables++;
 
             // Creating new argument
@@ -926,13 +909,10 @@ Node* GetSingleFunction()
             arg->SetData                (arg_num);
 
             Node* next_arg = Node::CreateNode();
-            next_arg->SetDataType       (ARGUMENT_LIST);
+            next_arg->SetDataType       (DECLARE_ARGUMENT_LIST);
             next_arg->SetData           (n_arguments);
             next_arg->SetLeft           (nullptr);
             next_arg->SetRight          (arg);
-
-            //current->SetRight           (next_arg);
-            //current = current->GetLeft();
 
             if(n_arguments == 0){
                 first_arg = next_arg;
@@ -951,7 +931,7 @@ Node* GetSingleFunction()
         if(error)           return nullptr;
 
         func = Node::CreateNode();
-        func->SetDataType   (FUNCTION);
+        func->SetDataType   (DECLARE_FUNCTION);
         func->SetData       (n_functions);
         func->SetLeft       (body);
         func->SetRight      (first_arg);
@@ -963,7 +943,7 @@ Node* GetSingleFunction()
         if(error)           return nullptr;
 
         func = Node::CreateNode();
-        func->SetDataType   (FUNCTION);
+        func->SetDataType   (DECLARE_FUNCTION);
         func->SetData       (n_functions);
         func->SetLeft       (body);
         func->SetRight      (nullptr);
@@ -976,6 +956,9 @@ Node* GetSingleFunction()
         QuitFunction();
         return nullptr;
     }
+
+    // After creating function, set to zero variable counter
+    var_num_in_function = 0;
 
     QuitFunction();
     return func;
@@ -1140,7 +1123,7 @@ int PrintLeft(FILE* output, Node* left_node)
     EnterFunction();
 
     if(left_node != nullptr)
-        TranslateCode(output, left_node);
+        TranslateCode_2_lvl(output, left_node);
     else{
         SetColor(RED);
         DEBUG printf("=====   Unexpected nullptr as left branch  =====\n");
@@ -1166,7 +1149,7 @@ int PrintRight(FILE* output, Node* right_node)
     EnterFunction();
 
     if(right_node != nullptr)
-        TranslateCode(output, right_node);
+        TranslateCode_2_lvl(output, right_node);
     else{
         SetColor(RED);
         DEBUG printf("=====   Unexpected nullptr as left branch  =====\n");
@@ -1238,8 +1221,6 @@ int PrintUntil(FILE* output, Node* root_node)
         return UNEXPECTED_NULLPTR;
     }
 
-    //labels_num++;
-
     QuitFunction();
     return OK;
 }
@@ -1253,14 +1234,19 @@ int PrintAssign(FILE* output, Node* root_node)                                  
 {
     EnterFunction();
 
-    if(root_node->GetRight()->GetDataType() == CONSTANT)
+    /* */if(root_node->GetRight()->GetDataType() == VARIABLE)
+        fprintf(output, "push ax \npush %d \nadd \npop cx \npush [cx]\n", (int)root_node->GetRight()->GetData());
+    else if(root_node->GetRight()->GetDataType() == CONSTANT)
         fprintf(output, "push ");
     int right = PrintRight(output, root_node->GetRight());
+    /*
     fprintf(output, "pop ");
     int left  = PrintLeft (output, root_node->GetLeft());
+    */
+    fprintf(output, "push ax \npush %d \nadd \npop cx \npop [cx]\n", (int)root_node->GetLeft()->GetData());
 
-    if(left == UNEXPECTED_NULLPTR || right == UNEXPECTED_NULLPTR){
-        PrintVar(left);
+    if(/*left == UNEXPECTED_NULLPTR || */right == UNEXPECTED_NULLPTR){
+        /*PrintVar(left);*/
         PrintVar(right);
 
         QuitFunction();
@@ -1306,14 +1292,27 @@ int PrintOperands(FILE* output, Node* root_node)
 {
     EnterFunction();
 
+    /*
     if (root_node->GetRight()->GetDataType() == CONSTANT ||
         root_node->GetRight()->GetDataType() == VARIABLE)
         fprintf(output, "push ");
-    TranslateCode(output, root_node->GetRight());
+    TranslateCode_2_lvl(output, root_node->GetRight());
     if (root_node->GetLeft()->GetDataType() == CONSTANT ||
         root_node->GetLeft()->GetDataType() == VARIABLE)
         fprintf(output, "push ");
-    TranslateCode(output, root_node->GetLeft());
+    TranslateCode_2_lvl(output, root_node->GetLeft());
+    */
+    if (root_node->GetRight()->GetDataType() == CONSTANT)
+        fprintf(output, "push ");
+    if (root_node->GetRight()->GetDataType() == VARIABLE)
+        fprintf(output, "push ax \npush %d \nadd \npop cx \npush [cx]\n", (int)root_node->GetRight()->GetData());
+    TranslateCode_2_lvl(output, root_node->GetRight());
+
+    if (root_node->GetLeft()->GetDataType() == CONSTANT)
+        fprintf(output, "push ");
+    if (root_node->GetLeft()->GetDataType() == VARIABLE)
+        fprintf(output, "push ax \npush %d \nadd \npop cx \npush [cx]\n", (int)root_node->GetLeft()->GetData());
+    TranslateCode_2_lvl(output, root_node->GetLeft());
 
     QuitFunction();
     return OK;
@@ -1435,8 +1434,70 @@ int PrintBinOperation(FILE* output, Node* root_node)
     QuitFunction();
     return OK;
 }
+/*
+/// Prints variable-nodes
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+/
+int PrintVariable(FILE* output, Node* root_node)
+{
+    EnterFunction();
 
-int TranslateCode(FILE* output, Node* root_node)
+    //fprintf(output, "push ax \npush %d \nadd \npop cx");
+
+    QuitFunction();
+    return OK;
+}
+*/
+
+/// Prints call-function nodes
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintCallFunction(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    fprintf(output, "\n\npush ax \npop [bx] \npush bx \npop ax \npush bx \npush 1 \nadd \npop bx\n");
+    if(root_node->GetRight() != nullptr)        // arguments will be printed if they present
+        TranslateCode_2_lvl(output, root_node->GetRight());
+    fprintf(output, "call _%s\n", functions[(int)root_node->GetData()]);
+
+    QuitFunction();
+    return OK;
+}
+
+/// Prints argument list nodes
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintCallArgList(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    //fprintf(output, "push ");
+
+    // Here we believe that variable or constant is on the right
+    if(root_node->GetRight()->GetDataType() == CONSTANT)
+        fprintf(output, "push %lg\n", root_node->GetRight()->GetData());
+    if(root_node->GetRight()->GetDataType() == VARIABLE)
+        fprintf(output, "push ax \npush %d \nadd \npop cx \npush [cx]\n", (int)root_node->GetRight()->GetData());
+
+    //PrintRight(output, root_node->GetRight());      // Here we believe that variable or constant is on the right
+
+    fprintf(output, "pop bx \npush 1 \npush bx \nadd \npop bx\n");
+    if(root_node->GetLeft() != nullptr)
+        TranslateCode_2_lvl(output, root_node->GetLeft());
+
+    QuitFunction();
+    return OK;
+}
+
+
+int TranslateCode_2_lvl(FILE* output, Node* root_node)
 {
     EnterFunction();
 
@@ -1455,12 +1516,13 @@ int TranslateCode(FILE* output, Node* root_node)
         }
         case VARIABLE_TO_CREATE:
         {
-            // Now nothing. Lately - create new, i.e. something related to
+            // Nothing
             break;
         }
         case VARIABLE:
         {
-            fprintf(output, " [%d]\n", (int)root_node->GetData());
+            //fprintf(output, " [%d]\n", (int)root_node->GetData());
+            // All prints are already done before we ask for it.
             break;
         }
         case CONSTANT:
@@ -1468,11 +1530,106 @@ int TranslateCode(FILE* output, Node* root_node)
             fprintf(output, "% lg\n", root_node->GetData());
             break;
         }
+
+        // =============================
+
+        case CALL_FUNCTION:
+        {
+            PrintCallFunction(output, root_node);
+            break;
+        }
+        case CALL_ARGUMENT_LIST:
+        {
+            PrintCallArgList(output, root_node);
+            break;
+        }
+        case ARGUMENT:
+        {
+            // Nothing
+            break;
+        }
+
     }
 
     QuitFunction();
     return OK;
 }
+
+// =========================================================
+
+/// Prints high nodes
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintGlobal(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    if(root_node->GetRight() != nullptr)
+        TranslateCode_1_lvl(output, root_node->GetRight());
+    if(root_node->GetLeft() != nullptr)
+        TranslateCode_1_lvl(output, root_node->GetLeft());
+
+    QuitFunction();
+    return OK;
+}
+
+/// Prints declare-func nodes
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintDeclareFunction(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    fprintf(output, "label _%s\n", functions[(int)root_node->GetData()]);
+    TranslateCode_2_lvl(output, root_node->GetLeft());
+    fprintf(output, "\npush ax \npop bx \npush [ax] \npop ax \nret\n\n");
+
+    QuitFunction();
+    return OK;
+}
+
+int TranslateCode_1_lvl(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    switch(root_node->GetDataType())
+    {
+        case GLOBAL_NODE:
+        {
+            PrintGlobal(output, root_node);
+            break;
+        }
+        case DECLARE_FUNCTION:
+        {
+            PrintDeclareFunction(output, root_node);
+            break;
+        }
+        case MAIN_FUNCTION:
+        {
+            TranslateCode_2_lvl(output, root_node->GetLeft());
+            fprintf(output, "end\n\n\n");
+            break;
+        }
+        case DECLARE_ARGUMENT_LIST:
+        {
+            // Nothing
+            break;
+        }
+
+    }
+
+    QuitFunction();
+    return OK;
+}
+
+
+
+
+
 
 int BuildSyntaxTree(Tree* tree)
 {
@@ -1503,7 +1660,8 @@ int CompileCode()
     Tree tree;
 
     BuildSyntaxTree(&tree);
-    tree.CallGraph();
-    TranslateCode(output, tree.GetRoot());
+    //tree.CallGraph();
+    //TranslateCode_2_lvl(output, tree.GetRoot());
+    return TranslateCode_1_lvl(output, tree.GetRoot());
 }
 

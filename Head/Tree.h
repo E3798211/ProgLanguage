@@ -41,20 +41,22 @@
 // =================================================
 
 enum NodeTypes {
-    GLOBAL_NODE,
-    FUNCTION,
-    MAIN_FUNCTION,
+    GLOBAL_NODE,            // 0
+    DECLARE_FUNCTION,       // 1
+    CALL_FUNCTION,          // 2
+    MAIN_FUNCTION,          // 3
 
-    ARGUMENT_LIST,
-    ARGUMENT,
+    DECLARE_ARGUMENT_LIST,  // 4
+    CALL_ARGUMENT_LIST,     // 5
+    ARGUMENT,               // 6
 
-    VARIABLE_TO_CREATE,
+    VARIABLE_TO_CREATE,     // 7
 
-    CONSTANT,
-    VARIABLE,
+    CONSTANT,               // 8
+    VARIABLE,               // 9
 
-    BIN_OPERATION,
-    OPERATOR
+    BIN_OPERATION,          // 10
+    OPERATOR                // 11
 };
 
 enum Operators {

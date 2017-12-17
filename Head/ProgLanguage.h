@@ -32,9 +32,20 @@ int CompileCode();
 
 /// Gets round the tree and writes correct asm code to output file
 /**
+    Responsible for Function nodes and higher
+
     \param [in] output              File where to write
     \param [in] root_node           Pointer to the root of the tree
 */
-int TranslateCode(FILE* output, Node* root_node);
+int TranslateCode_1_lvl(FILE* output, Node* root_node);
+
+/// Gets round branches and writes correct asm code to output file
+/**
+    Responsible for Operators nodes and lower
+
+    \param [in] output              File where to write
+    \param [in] root_node           Pointer to the root of the tree
+*/
+int TranslateCode_2_lvl(FILE* output, Node* root_node);
 
 #endif // PROGLANGUAGE_H_INCLUDED

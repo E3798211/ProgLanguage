@@ -1,31 +1,17 @@
-function Func_f : s t r
+function F : F_first_arg
 {
-	var xx
-	var yy
-}
-
-function Func_s
-{
-	var xxx
-	var yyy
-}
-
-function Func_t : rr
-{
-	var xxxxxxxx
-	var yyyyyyy
+	var F_f
+	F_f = 0
+	if(F_first_arg > 0){
+		F_f = 5
+	}
 }
 
 main{
 	var x
-	var y
-	var z
-	x = 12345
-	y = 23456
-	z = 34567
-	
-	Func_s[]
+	x = -1
+	F[ x ]
 
-	Func_f[ x | Func_t[x] | y ]
-
+	x = 5
+	F[ x ]
 }
