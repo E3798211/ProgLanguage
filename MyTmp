@@ -20,3 +20,13 @@ until(x < 10){
 		}
 		x = x + 1
 	}
+
+
+push ax 
+push 2 
+add 
+pop cx 
+push [cx]
+out
+
+

@@ -24,5 +24,8 @@ int main()
     //BuildSyntaxTree(&a);
 
     //a.CallGraph();
-    CompileCode();
+    //CompileCode();
+
+    //remove("a");
+    Preprocessor("AAA", "HEY_YO");
 }

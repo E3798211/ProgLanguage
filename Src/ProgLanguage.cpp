@@ -2,6 +2,7 @@
 
 // =========================================    SUPPORTING FUNCTIONS
 
+
 /// Returns amount of chars read
 /**
     \param [in]  filename               Name of the file to be read
@@ -9,6 +10,7 @@
 
     \warning Returns -1 in case of error
 */
+/*
 int FileRead(const char* file_name, char*& dest)
 {
     EnterFunction();
@@ -44,7 +46,6 @@ int FileRead(const char* file_name, char*& dest)
         return -1;
     }
 
-    //dest = nullptr;
     try
     {
         dest = new char [file_size];
@@ -66,7 +67,7 @@ int FileRead(const char* file_name, char*& dest)
 
     QuitFunction();
     return n_chars;
-}
+}*/
 
 /// Checks if given character is space
 /**
@@ -127,7 +128,7 @@ void SkipAllSpaces()
 {
     while(isspace(s[p]))    p++;
 }
-int GetWord(char* word)
+int  GetWord(char* word)
 {
     EnterFunction();
 
@@ -1224,6 +1225,8 @@ int PrintRight(FILE* output, Node* right_node)
 
 int labels_num = 0;
 
+
+
 /// Prints if-node
 /**
     \param [in] output              Output file
@@ -1751,6 +1754,8 @@ int BuildSyntaxTree(Tree* tree)
 {
     EnterFunction();
 
+    // PREPROCESSING
+
     char* programm = nullptr;
     FileRead(USR_CODE, programm);
     if(programm == nullptr){
@@ -1775,9 +1780,10 @@ int CompileCode()
 
     Tree tree;
 
-    BuildSyntaxTree(&tree);
-    tree.CallGraph();
-    //TranslateCode_2_lvl(output, tree.GetRoot());
-    return TranslateCode_1_lvl(output, tree.GetRoot());
+    // BuildSyntaxTree(&tree);
+    // tree.CallGraph();
+    // TranslateCode_2_lvl(output, tree.GetRoot());
+    // return TranslateCode_1_lvl(output, tree.GetRoot());
 }
+
 

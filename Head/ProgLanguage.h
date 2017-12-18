@@ -2,6 +2,7 @@
 #define PROGLANGUAGE_H_INCLUDED
 
 #include "Tree.h"
+#include "Preprocessor.h"
 #include <ctype.h>
 
 // =========================================    DEFAULT FILES
