@@ -1,13 +1,16 @@
-function F : x
+main
 {
-	return x * 3
-}
-
-main{
 	var x
-	x = 6
+	x = 7
+	until(x < 10)
+	{
+		x = x + 1
+		asm 
+		<
+			push [cx]
+			out
+			pop [cx]
+		>
+	}
 	
-	asm [push 1000]
-
-	x = F [ x ]
 }

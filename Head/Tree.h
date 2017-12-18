@@ -58,7 +58,8 @@ enum NodeTypes {
 
     BIN_OPERATION,          // 11
     OPERATOR,               // 12
-    ASM_INSERT              // 13
+    ASM_INSERT,             // 13
+    ASM_CODE_BEG            // 14
 };
 
 enum Operators {

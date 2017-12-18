@@ -656,15 +656,20 @@ Node* GetOperator()
         SkipSpaces();
         p += shift;
         SkipAllSpaces();
-        if(s[p] == '['){
+        if(s[p] == '<'){
 
             int beg = ++p;
 
-            Node* asm_insert = Node::CreateNode();
-            asm_insert->SetDataType(ASM_INSERT);
-            asm_insert->SetData(beg);
+            Node* asm_beg    = Node::CreateNode();
+            asm_beg->SetDataType        (ASM_CODE_BEG);
+            asm_beg->SetData            (beg);
 
-            while(s[p] != ']')  p++;
+            Node* asm_insert = Node::CreateNode();
+            asm_insert->SetDataType     (OPERATOR);
+            asm_insert->SetData         (ASM_INSERT);
+            asm_insert->SetRight        (asm_beg);
+
+            while(s[p] != '>')  p++;
             p++;
 
             return asm_insert;
@@ -1373,6 +1378,25 @@ int PrintOperands(FILE* output, Node* root_node)
     return OK;
 }
 
+/// Prints asm-node
+/**
+    \param [in] output              Output file
+    \param [in] root_node           Pointer to the root
+*/
+int PrintAsmInsert(FILE* output, Node* root_node)
+{
+    EnterFunction();
+
+    int i = (int)root_node->GetRight()->GetData();
+    while(s[i] != '>'){
+        fprintf(output, "%c", s[i++]);
+    }
+    fprintf(output, "\n");
+
+    QuitFunction();
+    return OK;
+}
+
 // =============================================================    Global print functions
 
 /// Prints operator-nodes
@@ -1405,6 +1429,11 @@ int PrintOperator(FILE* output, Node* root_node)
         case COMPOSITE_OP:
         {
             PrintComposite  (output, root_node);
+            break;
+        }
+        case ASM_INSERT:
+        {
+            PrintAsmInsert  (output, root_node);
             break;
         }
     }
