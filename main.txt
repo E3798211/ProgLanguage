@@ -1,16 +1,41 @@
+$plug defio
+$plug minmaths
+
+function I_want_to_sleep
+{
+	var x
+	var y
+
+	x = get [ ]
+
+	y = get [ ]
+
+	x = min [ x | y ]
+	
+	y = max [ x | y ]
+
+	until(x < y)
+	{
+		x = x + 2
+		write [ x + y ]
+	}
+}
+
 main
 {
 	var x
-	x = 7
-	until(x < 10)
-	{
-		x = x + 1
-		asm 
-		<
-			push [cx]
-			out
-			pop [cx]
-		>
-	}
+	var z
+
+	z = get [ ]
 	
+	z = fact [ z ]
+
+	write [ z ]
+
+	x = sqrt [ get [ ] ]
+	
+	write [ x ]
+
+	I_want_to_sleep [ ]
+
 }

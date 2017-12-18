@@ -1,0 +1,29 @@
+function write : x
+{
+	asm
+	<
+		push  ax
+		push  1
+		add
+		pop   cx
+		push [cx]
+		out
+		pop  [cx]
+	>
+}
+
+function get
+{
+	var x
+	asm
+	<
+		in
+		push ax 
+		push 1 
+		add 
+		pop cx 
+		pop [cx]
+	>
+
+	return x
+}

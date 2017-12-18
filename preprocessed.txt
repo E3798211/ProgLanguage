@@ -1,0 +1,156 @@
+function write : x
+{
+	asm
+	<
+		push  ax
+		push  1
+		add
+		pop   cx
+		push [cx]
+		out
+		pop  [cx]
+	>
+}
+
+function get
+{
+	var x
+	asm
+	<
+		in
+		push ax 
+		push 1 
+		add 
+		pop cx 
+		pop [cx]
+	>
+
+	return x
+}
+function min : x xx
+{
+	if( x > xx )
+	{
+		return xx
+	}
+
+	if( x < xx )
+	{
+		return x
+	}
+
+}
+
+function max : x xx
+{
+	if( x > xx )
+	{
+		return x
+	}
+
+	if( x < xx )
+	{
+		return xx
+	}
+
+}
+
+function sqrt : x
+{
+	asm
+	<
+		push ax 
+		push 1 
+		add 
+		pop cx 
+		push [cx]
+		fsqrt
+		pop  [cx]
+	>
+
+	return x
+}
+
+function sin : x
+{
+	asm
+	<
+		push ax 
+		push 1 
+		add 
+		pop cx 
+		push [cx]
+		sin
+		pop  [cx]
+	>
+
+	return x
+}
+
+function cos : x
+{
+	asm
+	<
+		push ax 
+		push 1 
+		add 
+		pop cx 
+		push [cx]
+		cos
+		pop  [cx]
+	>
+
+	return x
+}
+
+function fact : x
+{
+	if(x < 2)
+	{
+		return 1
+	}
+
+	var y
+	y = fact [ x - 1 ]
+	
+	return x * y
+}
+
+function I_want_to_sleep
+{
+	var x
+	var y
+
+	x = get [ ]
+
+	y = get [ ]
+
+	x = min [ x | y ]
+	
+	y = max [ x | y ]
+
+	until(x < y)
+	{
+		x = x + 2
+		write [ x + y ]
+	}
+}
+
+main
+{
+	var x
+	var z
+
+	z = get [ ]
+	
+	z = fact [ z ]
+
+	write [ z ]
+
+	x = sqrt [ get [ ] ]
+	
+	write [ x ]
+
+	I_want_to_sleep [ ]
+
+}  

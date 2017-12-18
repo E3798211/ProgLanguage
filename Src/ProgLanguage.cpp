@@ -263,6 +263,9 @@ Node* GetP()
         char word[MAX_VAR_NAME_LEN] = {};
         p += GetWord(word);
 
+        for(int i = 0; i < 10; i++)
+            PrintVar(variables[i]);
+
         /* */if(VarExists(word)){
 
             int i = 0;
@@ -343,7 +346,7 @@ Node* GetP()
 
 
             int i = 0;
-            while(!strcmp(word, variables[i]))
+            while(strcmp(word, functions[i]))
                 i++;
 
             Node* new_node = Node::CreateNode();
@@ -360,6 +363,7 @@ Node* GetP()
         }
         else{
 
+            MARK
             SetColor(RED);
             printf("=====   %s was not declared in this scope   =====\n", word);
             SetColor(DEFAULT);
@@ -672,6 +676,7 @@ Node* GetOperator()
 
             while(s[p] != '>')  p++;
             p++;
+            SkipAllSpaces();
 
             return asm_insert;
 
@@ -705,6 +710,7 @@ Node* GetOperator()
             SkipEnters();
             if(s[p] == '}'){
                 p++;
+                //SkipAllSpaces();
                 break;
             }
 
@@ -927,6 +933,7 @@ Node* GetSingleFunction()
     SkipSpaces();
     /* */if(s[p] == ':'){       // Function with arguments
 
+        var_num_in_function = 0;
         p++;
 
         int n_arguments = 0;
@@ -935,6 +942,11 @@ Node* GetSingleFunction()
             SkipSpaces();
             p += GetWord(word);
             PrintVar(p);
+
+            PrintVar(var_num_in_function);
+            PrintVar(n_variables);
+            for(int i = 0; i < 10; i++)
+                PrintVar(variables[i]);
 
             // Checking if such variable already exists
 
@@ -950,11 +962,15 @@ Node* GetSingleFunction()
                 return nullptr;
             }
 
-            strcpy(variables[n_variables], word);
+            //strcpy(variables[n_variables], word);
+            strcpy(variables[var_num_in_function], word);
+            //strcpy(variables[var_num_in_function + 1], word);
             //int arg_num = n_variables;
             int arg_num = var_num_in_function + 1;
             var_num_in_function++;
             n_variables++;
+
+
 
             // Creating new argument
 
@@ -1140,7 +1156,7 @@ Node* GetGO(const char* expr)
 
     //Node* top_operand = GetOperator();
     Node* top_operand = GetFunctions();
-    if(s[p] != '\n' && s[p] != '\0'){
+    if(s[p] != '\n' && s[p] != '\0' && !isspace(s[p])){
         int error_pos = CountLine();
         SetColor(RED);
         printf("G0: Error in line %d\n", error_pos);
@@ -1754,10 +1770,14 @@ int BuildSyntaxTree(Tree* tree)
 {
     EnterFunction();
 
-    // PREPROCESSING
+    Preprocessor(USR_CODE, PREPROCESSED_CODE);
+
+    FILE* a = fopen(PREPROCESSED_CODE, "a");
+    fprintf(a, " ");
+    fclose(a);
 
     char* programm = nullptr;
-    FileRead(USR_CODE, programm);
+    FileRead(PREPROCESSED_CODE, programm);
     if(programm == nullptr){
         SetColor(RED);
         DEBUG printf("=====   programm == nullptr   =====\n");
@@ -1780,10 +1800,10 @@ int CompileCode()
 
     Tree tree;
 
-    // BuildSyntaxTree(&tree);
-    // tree.CallGraph();
-    // TranslateCode_2_lvl(output, tree.GetRoot());
-    // return TranslateCode_1_lvl(output, tree.GetRoot());
+    BuildSyntaxTree(&tree);
+    //tree.CallGraph();
+    //TranslateCode_2_lvl(output, tree.GetRoot());
+    return TranslateCode_1_lvl(output, tree.GetRoot());
 }
 
 

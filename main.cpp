@@ -5,27 +5,5 @@
 
 int main()
 {
-    /*
-    Tree a;
-
-    a._root->SetLeft(Node::CreateNode());
-    a._root->SetRight(Node::CreateNode());
-    Node* b = a._root->GetLeft();
-
-    b->SetLeft(Node::CreateNode());
-    b->SetRight(Node::CreateNode());
-
-    a._root->GetLeft()->GetLeft()->SetData(123);
-
-    a.CallGraph();
-    */
-
-    //Tree a;
-    //BuildSyntaxTree(&a);
-
-    //a.CallGraph();
-    //CompileCode();
-
-    //remove("a");
-    Preprocessor("AAA", "HEY_YO");
+    CompileCode();
 }

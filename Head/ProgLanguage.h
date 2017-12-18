@@ -7,8 +7,9 @@
 
 // =========================================    DEFAULT FILES
 
-const char USR_CODE[] = "main.txt";
-const char ASM_CODE[] = "out.txt";
+const char USR_CODE[]           = "main.txt";
+const char PREPROCESSED_CODE[]  = "preprocessed.txt";
+const char ASM_CODE[]           = "out.txt";
 
 // =========================================    Recursive descent parser
 
